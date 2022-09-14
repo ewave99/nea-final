@@ -3,6 +3,13 @@
 
 static void doDrawing(cairo_t *canvas);
 
+const int RECTS[][4] = {
+    { 0, 0, 40, 40 },
+    { 40, 40, 500, 20 },
+    { 20, 400, 400, 400 },
+    { 0, 0, 0, 0 }
+};
+
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas,
         gpointer user_data)
@@ -15,16 +22,16 @@ onDrawEvent(GtkWidget *widget, cairo_t *canvas,
 static void
 doDrawing(cairo_t *canvas)
 {
-    cairo_set_source_rgb(canvas, 0, 0, 0);
-    cairo_select_font_face(canvas, "Sans", CAIRO_FONT_SLANT_NORMAL, 
-            CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(canvas, 40.0);
-
-    cairo_move_to(canvas, 10.0, 50.0);
-    cairo_show_text(canvas, "NEA Final.");
-
-    cairo_rectangle(canvas, 20, 50, 90, 500);
     cairo_set_source_rgb(canvas, 255, 0, 0);
-    cairo_fill(canvas);
+
+    gint i = 0;
+    while (RECTS[i][2] != 0 && RECTS[i][3] != 0)
+    {
+        cairo_rectangle(canvas, RECTS[i][0], RECTS[i][1], RECTS[i][2],
+                RECTS[i][3]);
+        cairo_fill(canvas);
+
+        i ++;
+    }
 }
 
