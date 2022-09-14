@@ -86,13 +86,16 @@ createLeftPane()
     GtkWidget* grid;
     GtkWidget* text_editing_area;
     GtkWidget* control_button_area;
+    GtkWidget* error_reporting_area;
 
     grid = gtk_grid_new();
     text_editing_area = createTextEditingArea();
     control_button_area = createControlButtonArea();
+    error_reporting_area = createErrorReportingArea();
 
     gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
 
     return grid;
 }
@@ -167,6 +170,7 @@ createErrorReportingArea()
             screen_dimensions.width / 2, screen_dimensions.height / 6);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
 
     gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
 
