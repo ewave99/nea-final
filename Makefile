@@ -11,7 +11,7 @@ INCS = -I. -I/usr/include -I/usr/include/gtk-3.0 -I/usr/include/glib-2.0 \
 
 CFLAGS = -g -Wall ${INCS}
 
-LIBS = `pkg-config --cflags --libs gtk+-3.0 glib-2.0`
+LIBS = `pkg-config --cflags --libs cairo gtk+-3.0 glib-2.0`
 
 all: main
 
