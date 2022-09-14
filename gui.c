@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
+#include "drawing.h"
 
 /*
     GUI HIERARCHY:
@@ -17,6 +18,7 @@
            |-> right pane (drawing area)
 */
 
+void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
 static GtkWidget* createLeftPane();
@@ -24,31 +26,6 @@ static GtkWidget* createTextEditingArea();
 static GtkWidget* createControlButtonArea();
 static GtkWidget* createErrorReportingArea();
 static GtkWidget* createRightPane();
-
-static void
-doDrawing(cairo_t *canvas)
-{
-    cairo_set_source_rgb(canvas, 0, 0, 0);
-    cairo_select_font_face(canvas, "Sans", CAIRO_FONT_SLANT_NORMAL, 
-            CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(canvas, 40.0);
-
-    cairo_move_to(canvas, 10.0, 50.0);
-    cairo_show_text(canvas, "NEA Final.");
-
-    cairo_rectangle(canvas, 20, 50, 90, 500);
-    cairo_set_source_rgb(canvas, 255, 0, 0);
-    cairo_fill(canvas);
-}
-
-static gboolean
-onDrawEvent(GtkWidget *widget, cairo_t *canvas,
-        gpointer user_data)
-{
-    doDrawing(canvas);
-
-    return FALSE;
-}
 
 void
 activate(GtkApplication *app, gpointer user_data)

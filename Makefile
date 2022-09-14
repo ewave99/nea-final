@@ -1,6 +1,7 @@
 SRC = \
 	  main.c \
-	  gui.c
+	  gui.c \
+	  drawing.c
 
 OBJ = ${SRC:.c=.o}
 
