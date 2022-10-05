@@ -2,6 +2,18 @@
 #include <cairo/cairo.h>
 #include "drawing.h"
 
+/* we are going to use these structs in order to feed the address of the text
+ * buffer back through to the main function of the program so we can process
+ * text in a separate area of the program to the GUI. */
+typedef struct {
+    GtkWidget* text_editing_area;
+} GlobalWidgets;
+
+typedef struct {
+    GtkWidget* main_widget;
+    GlobalWidgets global_widgets;
+} ReturnStruct;
+
 /*
     GUI HIERARCHY:
     ==============
