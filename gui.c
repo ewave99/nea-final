@@ -18,6 +18,11 @@
            |-> right pane (drawing area)
 */
 
+typedef struct {
+    GtkTextBuffer *text_editing_buffer;
+    GtkTextBuffer *error_reporting_buffer;
+} ApplicationContext;
+
 void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
@@ -26,7 +31,7 @@ static GtkWidget* createTextEditingArea(GtkTextBuffer **text_buffer);
 static GtkWidget* createControlButtonArea(GtkWidget **button_run,
         GtkWidget **button_stop, GtkWidget **button_update,
         GtkWidget **button_save);
-static GtkWidget* createErrorReportingArea();
+static GtkWidget* createErrorReportingArea(GtkTextBuffer **text_buffer);
 static GtkWidget* createRightPane();
 
 static void doRunButtonCallback(GtkWidget *widget, gpointer data);
@@ -102,25 +107,32 @@ createLeftPane()
     GtkWidget* button_save;
 
     GtkTextBuffer* text_editing_buffer;
+    GtkTextBuffer* error_reporting_buffer;
+
+    ApplicationContext* context;
 
     grid = gtk_grid_new();
     text_editing_area = createTextEditingArea(&text_editing_buffer);
     control_button_area = createControlButtonArea(&button_run, &button_stop,
             &button_update, &button_save);
-    error_reporting_area = createErrorReportingArea();
+    error_reporting_area = createErrorReportingArea(&error_reporting_buffer);
 
     gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
 
+    context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
+    context->text_editing_buffer = text_editing_buffer;
+    context->error_reporting_buffer = error_reporting_buffer;
+
     g_signal_connect(button_run, "clicked",
-            G_CALLBACK(doRunButtonCallback), text_editing_buffer);
+            G_CALLBACK(doRunButtonCallback), context);
     g_signal_connect(button_stop, "clicked",
-            G_CALLBACK(doStopButtonCallback), text_editing_buffer);
+            G_CALLBACK(doStopButtonCallback), context);
     g_signal_connect(button_update, "clicked",
-            G_CALLBACK(doUpdateButtonCallback), text_editing_buffer);
+            G_CALLBACK(doUpdateButtonCallback), context);
     g_signal_connect(button_stop, "clicked",
-            G_CALLBACK(doSaveButtonCallback), text_editing_buffer);
+            G_CALLBACK(doSaveButtonCallback), context);
 
     return grid;
 }
@@ -175,7 +187,7 @@ createControlButtonArea(GtkWidget **button_run, GtkWidget **button_stop,
 }
 
 static GtkWidget*
-createErrorReportingArea()
+createErrorReportingArea(GtkTextBuffer **text_buffer)
 {
     GtkWidget* scrolled_window;
     GtkWidget* text_view;
@@ -195,6 +207,8 @@ createErrorReportingArea()
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
+
+    *text_buffer = gtk_text_view_get_buffer(text_view);
 
     gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
 
@@ -223,27 +237,27 @@ createRightPane()
 static void
 doRunButtonCallback(GtkWidget *widget, gpointer data)
 {
-    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
-    printf("%p\n", text_editing_buffer);
+    ApplicationContext* context = (ApplicationContext*) data;
+    printf("%p\n", context->text_editing_buffer);
 }
 
 static void
 doStopButtonCallback(GtkWidget *widget, gpointer data)
 {
-    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
-    printf("%p\n", text_editing_buffer);
+    ApplicationContext* context = (ApplicationContext*) data;
+    printf("%p\n", context->text_editing_buffer);
 }
 
 static void
 doUpdateButtonCallback(GtkWidget *widget, gpointer data)
 {
-    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
-    printf("%p\n", text_editing_buffer);
+    ApplicationContext* context = (ApplicationContext*) data;
+    printf("%p\n", context->text_editing_buffer);
 }
 
 static void
 doSaveButtonCallback(GtkWidget *widget, gpointer data)
 {
-    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
-    printf("%p\n", text_editing_buffer);
+    ApplicationContext* context = (ApplicationContext*) data;
+    printf("%p\n", context->text_editing_buffer);
 }
