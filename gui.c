@@ -2,18 +2,6 @@
 #include <cairo/cairo.h>
 #include "drawing.h"
 
-/* we are going to use these structs in order to feed the address of the text
- * buffer back through to the main function of the program so we can process
- * text in a separate area of the program to the GUI. */
-typedef struct {
-    GtkWidget* text_editing_area;
-} GlobalWidgets;
-
-typedef struct {
-    GtkWidget* main_widget;
-    GlobalWidgets global_widgets;
-} ReturnStruct;
-
 /*
     GUI HIERARCHY:
     ==============
@@ -34,10 +22,17 @@ void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
 static GtkWidget* createLeftPane();
-static GtkWidget* createTextEditingArea();
-static GtkWidget* createControlButtonArea();
+static GtkWidget* createTextEditingArea(GtkTextBuffer **text_buffer);
+static GtkWidget* createControlButtonArea(GtkWidget **button_run,
+        GtkWidget **button_stop, GtkWidget **button_update,
+        GtkWidget **button_save);
 static GtkWidget* createErrorReportingArea();
 static GtkWidget* createRightPane();
+
+static void doRunButtonCallback(GtkWidget *widget, gpointer data);
+static void doStopButtonCallback(GtkWidget *widget, gpointer data);
+static void doUpdateButtonCallback(GtkWidget *widget, gpointer data);
+static void doSaveButtonCallback(GtkWidget *widget, gpointer data);
 
 void
 activate(GtkApplication *app, gpointer user_data)
@@ -96,24 +91,42 @@ static GtkWidget*
 createLeftPane()
 {
     GtkWidget* grid;
+
     GtkWidget* text_editing_area;
     GtkWidget* control_button_area;
     GtkWidget* error_reporting_area;
 
+    GtkWidget* button_run;
+    GtkWidget* button_stop;
+    GtkWidget* button_update;
+    GtkWidget* button_save;
+
+    GtkTextBuffer* text_editing_buffer;
+
     grid = gtk_grid_new();
-    text_editing_area = createTextEditingArea();
-    control_button_area = createControlButtonArea();
+    text_editing_area = createTextEditingArea(&text_editing_buffer);
+    control_button_area = createControlButtonArea(&button_run, &button_stop,
+            &button_update, &button_save);
     error_reporting_area = createErrorReportingArea();
 
     gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
 
+    g_signal_connect(button_run, "clicked",
+            G_CALLBACK(doRunButtonCallback), text_editing_buffer);
+    g_signal_connect(button_stop, "clicked",
+            G_CALLBACK(doStopButtonCallback), text_editing_buffer);
+    g_signal_connect(button_update, "clicked",
+            G_CALLBACK(doUpdateButtonCallback), text_editing_buffer);
+    g_signal_connect(button_stop, "clicked",
+            G_CALLBACK(doSaveButtonCallback), text_editing_buffer);
+
     return grid;
 }
 
 static GtkWidget*
-createTextEditingArea()
+createTextEditingArea(GtkTextBuffer **text_buffer)
 {
     GtkWidget* scrolled_window;
     GtkWidget* text_view;
@@ -133,31 +146,30 @@ createTextEditingArea()
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
 
+    *text_buffer = gtk_text_view_get_buffer(text_view);
+
     gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
 
     return scrolled_window;
 }
 
 static GtkWidget*
-createControlButtonArea()
+createControlButtonArea(GtkWidget **button_run, GtkWidget **button_stop,
+        GtkWidget **button_update, GtkWidget **button_save)
 {
     GtkWidget* hbox;
-    GtkWidget* button_run;
-    GtkWidget* button_stop;
-    GtkWidget* button_update;
-    GtkWidget* button_save;
 
     hbox = gtk_hbox_new(TRUE, 10);
 
-    button_run    = gtk_button_new_with_label("Run");
-    button_stop   = gtk_button_new_with_label("Stop");
-    button_update = gtk_button_new_with_label("Update");
-    button_save   = gtk_button_new_with_label("Save");
+    *button_run    = gtk_button_new_with_label("Run");
+    *button_stop   = gtk_button_new_with_label("Stop");
+    *button_update = gtk_button_new_with_label("Update");
+    *button_save   = gtk_button_new_with_label("Save");
 
-    gtk_box_pack_start(GTK_BOX(hbox),    button_run, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox),   button_stop, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), button_update, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox),   button_save, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),    *button_run, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),   *button_stop, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), *button_update, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),   *button_save, TRUE, TRUE, 0);
 
     return hbox;
 }
@@ -206,4 +218,32 @@ createRightPane()
     gtk_widget_queue_draw(drawing_area);
 
     return drawing_area;
+}
+
+static void
+doRunButtonCallback(GtkWidget *widget, gpointer data)
+{
+    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
+    printf("%p\n", text_editing_buffer);
+}
+
+static void
+doStopButtonCallback(GtkWidget *widget, gpointer data)
+{
+    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
+    printf("%p\n", text_editing_buffer);
+}
+
+static void
+doUpdateButtonCallback(GtkWidget *widget, gpointer data)
+{
+    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
+    printf("%p\n", text_editing_buffer);
+}
+
+static void
+doSaveButtonCallback(GtkWidget *widget, gpointer data)
+{
+    GtkTextBuffer* text_editing_buffer = (GtkTextBuffer *) data;
+    printf("%p\n", text_editing_buffer);
 }
