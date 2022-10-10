@@ -19,25 +19,25 @@
 */
 
 typedef struct {
-    GtkTextBuffer *text_editing_buffer;
-    GtkTextBuffer *error_reporting_buffer;
+    GtkWidget *text_edit_text_view;
+    GtkWidget *error_reporting_text_view;
 } ApplicationContext;
 
 void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
 static GtkWidget* createLeftPane();
-static GtkWidget* createTextEditingArea(GtkTextBuffer **text_buffer);
+static GtkWidget* createTextEditingArea(GtkWidget **text_view);
 static GtkWidget* createControlButtonArea(GtkWidget **button_run,
         GtkWidget **button_stop, GtkWidget **button_update,
         GtkWidget **button_save);
-static GtkWidget* createErrorReportingArea(GtkTextBuffer **text_buffer);
+static GtkWidget* createErrorReportingArea(GtkWidget **text_view);
 static GtkWidget* createRightPane();
 
-static void doRunButtonCallback(GtkWidget *widget, gpointer data);
-static void doStopButtonCallback(GtkWidget *widget, gpointer data);
-static void doUpdateButtonCallback(GtkWidget *widget, gpointer data);
-static void doSaveButtonCallback(GtkWidget *widget, gpointer data);
+static void doRunButtonCallback(GtkWidget *widget, ApplicationContext* context);
+static void doStopButtonCallback(GtkWidget *widget, ApplicationContext* context);
+static void doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context);
+static void doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context);
 
 void
 activate(GtkApplication *app, gpointer user_data)
@@ -106,24 +106,25 @@ createLeftPane()
     GtkWidget* button_update;
     GtkWidget* button_save;
 
-    GtkTextBuffer* text_editing_buffer;
-    GtkTextBuffer* error_reporting_buffer;
+    GtkWidget* text_edit_text_view;
+    GtkWidget* error_reporting_text_view;
 
     ApplicationContext* context;
 
     grid = gtk_grid_new();
-    text_editing_area = createTextEditingArea(&text_editing_buffer);
+    text_editing_area = createTextEditingArea(&text_edit_text_view);
     control_button_area = createControlButtonArea(&button_run, &button_stop,
             &button_update, &button_save);
-    error_reporting_area = createErrorReportingArea(&error_reporting_buffer);
+    error_reporting_area = createErrorReportingArea(
+            &error_reporting_text_view);
 
     gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
 
     context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
-    context->text_editing_buffer = text_editing_buffer;
-    context->error_reporting_buffer = error_reporting_buffer;
+    context->text_edit_text_view = text_edit_text_view;
+    context->error_reporting_text_view = error_reporting_text_view;
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
@@ -138,10 +139,9 @@ createLeftPane()
 }
 
 static GtkWidget*
-createTextEditingArea(GtkTextBuffer **text_buffer)
+createTextEditingArea(GtkWidget **text_view)
 {
     GtkWidget* scrolled_window;
-    GtkWidget* text_view;
     GdkRectangle screen_dimensions;
 
     screen_dimensions = getScreenDimensions();
@@ -152,15 +152,13 @@ createTextEditingArea(GtkTextBuffer **text_buffer)
     gtk_widget_set_size_request(GTK_WIDGET(scrolled_window),
             screen_dimensions.width / 2, screen_dimensions.height * 2 / 3);
 
-    text_view = gtk_text_view_new();
-    gtk_widget_set_size_request(GTK_WIDGET(text_view),
+    *text_view = gtk_text_view_new();
+    gtk_widget_set_size_request(GTK_WIDGET(*text_view),
             screen_dimensions.width / 2, screen_dimensions.height * 2 / 3);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
-    gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(*text_view), GTK_WRAP_WORD_CHAR);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(*text_view), TRUE);
 
-    *text_buffer = gtk_text_view_get_buffer(text_view);
-
-    gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
+    gtk_container_add(GTK_CONTAINER(scrolled_window), *text_view);
 
     return scrolled_window;
 }
@@ -187,10 +185,9 @@ createControlButtonArea(GtkWidget **button_run, GtkWidget **button_stop,
 }
 
 static GtkWidget*
-createErrorReportingArea(GtkTextBuffer **text_buffer)
+createErrorReportingArea(GtkWidget **text_view)
 {
     GtkWidget* scrolled_window;
-    GtkWidget* text_view;
     GdkRectangle screen_dimensions;
 
     screen_dimensions = getScreenDimensions();
@@ -201,16 +198,14 @@ createErrorReportingArea(GtkTextBuffer **text_buffer)
     gtk_widget_set_size_request(GTK_WIDGET(scrolled_window),
             screen_dimensions.width / 2, screen_dimensions.height / 6);
 
-    text_view = gtk_text_view_new();
-    gtk_widget_set_size_request(GTK_WIDGET(text_view),
+    *text_view = gtk_text_view_new();
+    gtk_widget_set_size_request(GTK_WIDGET(*text_view),
             screen_dimensions.width / 2, screen_dimensions.height / 6);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
-    gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(*text_view), GTK_WRAP_WORD_CHAR);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(*text_view), TRUE);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(*text_view), FALSE);
 
-    *text_buffer = gtk_text_view_get_buffer(text_view);
-
-    gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
+    gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(*text_view));
 
     return scrolled_window;
 }
@@ -235,29 +230,42 @@ createRightPane()
 }
 
 static void
-doRunButtonCallback(GtkWidget *widget, gpointer data)
+doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
-    ApplicationContext* context = (ApplicationContext*) data;
-    printf("%p\n", context->text_editing_buffer);
+    GtkWidget* text_edit_text_view;
+    GtkTextBuffer* text_edit_text_buffer;
+    GtkTextIter text_edit_buffer_start;
+    GtkTextIter text_edit_buffer_end;
+    gchar* text_edit_text_buffer_text;
+
+    text_edit_text_view = context->text_edit_text_view;
+
+    text_edit_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(text_edit_text_view));
+
+    gtk_text_buffer_get_bounds(text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end);
+
+    text_edit_text_buffer_text = gtk_text_buffer_get_text(
+            text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end, FALSE);
+
+    g_print("%s\n", text_edit_text_buffer_text);
+
+    g_free(text_edit_text_buffer_text);
 }
 
 static void
-doStopButtonCallback(GtkWidget *widget, gpointer data)
+doStopButtonCallback(GtkWidget *widget, ApplicationContext* data)
 {
-    ApplicationContext* context = (ApplicationContext*) data;
-    printf("%p\n", context->text_editing_buffer);
 }
 
 static void
-doUpdateButtonCallback(GtkWidget *widget, gpointer data)
+doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* data)
 {
-    ApplicationContext* context = (ApplicationContext*) data;
-    printf("%p\n", context->text_editing_buffer);
 }
 
 static void
-doSaveButtonCallback(GtkWidget *widget, gpointer data)
+doSaveButtonCallback(GtkWidget *widget, ApplicationContext* data)
 {
-    ApplicationContext* context = (ApplicationContext*) data;
-    printf("%p\n", context->text_editing_buffer);
 }
