@@ -204,6 +204,7 @@ createErrorReportingArea(GtkWidget **text_view)
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(*text_view), GTK_WRAP_WORD_CHAR);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(*text_view), TRUE);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(*text_view), FALSE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(*text_view), FALSE);
 
     gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(*text_view));
 
@@ -232,16 +233,15 @@ createRightPane()
 static void
 doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
-    GtkWidget* text_edit_text_view;
     GtkTextBuffer* text_edit_text_buffer;
     GtkTextIter text_edit_buffer_start;
     GtkTextIter text_edit_buffer_end;
     gchar* text_edit_text_buffer_text;
 
-    text_edit_text_view = context->text_edit_text_view;
+    GtkTextBuffer* error_reporting_text_buffer;
 
     text_edit_text_buffer = gtk_text_view_get_buffer(
-            GTK_TEXT_VIEW(text_edit_text_view));
+            GTK_TEXT_VIEW(context->text_edit_text_view));
 
     gtk_text_buffer_get_bounds(text_edit_text_buffer, &text_edit_buffer_start,
             &text_edit_buffer_end);
@@ -250,7 +250,12 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
             text_edit_text_buffer, &text_edit_buffer_start,
             &text_edit_buffer_end, FALSE);
 
-    g_print("%s\n", text_edit_text_buffer_text);
+    error_reporting_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    //g_print("%s\n", text_edit_text_buffer_text);
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            text_edit_text_buffer_text, -1);
 
     g_free(text_edit_text_buffer_text);
 }
