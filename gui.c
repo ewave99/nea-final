@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 #include "drawing.h"
+#include "text.h"
 
 /*
     GUI HIERARCHY:
@@ -253,9 +254,13 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
     error_reporting_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->error_reporting_text_view));
 
-    //g_print("%s\n", text_edit_text_buffer_text);
-    gtk_text_buffer_set_text(error_reporting_text_buffer,
-            text_edit_text_buffer_text, -1);
+    ParseResult result = processText(text_edit_text_buffer_text);
+
+    if (result.error_code != 0)
+    {
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                result.error_message, -1);
+    }
 
     g_free(text_edit_text_buffer_text);
 }
