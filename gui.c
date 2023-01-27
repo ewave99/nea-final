@@ -133,7 +133,7 @@ createLeftPane()
             G_CALLBACK(doStopButtonCallback), context);
     g_signal_connect(button_update, "clicked",
             G_CALLBACK(doUpdateButtonCallback), context);
-    g_signal_connect(button_stop, "clicked",
+    g_signal_connect(button_save, "clicked",
             G_CALLBACK(doSaveButtonCallback), context);
 
     return grid;
@@ -276,6 +276,52 @@ doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* data)
 }
 
 static void
-doSaveButtonCallback(GtkWidget *widget, ApplicationContext* data)
+doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
+    GtkTextBuffer* text_edit_text_buffer;
+    GtkTextIter text_edit_buffer_start;
+    GtkTextIter text_edit_buffer_end;
+    gchar* text_edit_text_buffer_text;
+
+    GtkTextBuffer* error_reporting_text_buffer;
+
+    int error_value;
+
+    FILE* file_ptr;
+
+    text_edit_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->text_edit_text_view));
+
+    gtk_text_buffer_get_bounds(text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end);
+
+    text_edit_text_buffer_text = gtk_text_buffer_get_text(
+            text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end, FALSE);
+
+    error_reporting_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "Saving file.", -1);
+
+    file_ptr = fopen("saved.txt", "w");
+
+    if (file_ptr == NULL)
+    {
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                "Could not open or create the file for writing.", -1);
+        g_free(text_edit_text_buffer_text);
+        return;
+    }
+
+    error_value = fprintf(file_ptr, text_edit_text_buffer_text);
+    
+    if (error_value < 0)
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                "There was an error writing the text to the file.", -1);
+
+    fclose(file_ptr);
+
+    g_free(text_edit_text_buffer_text);
 }
