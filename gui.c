@@ -31,7 +31,7 @@ static GtkWidget* createLeftPane();
 static GtkWidget* createTextEditingArea(GtkWidget **text_view);
 static GtkWidget* createControlButtonArea(GtkWidget **button_run,
         GtkWidget **button_stop, GtkWidget **button_update,
-        GtkWidget **button_save);
+        GtkWidget **button_save, GtkWidget **button_load);
 static GtkWidget* createErrorReportingArea(GtkWidget **text_view);
 static GtkWidget* createRightPane();
 
@@ -39,6 +39,7 @@ static void doRunButtonCallback(GtkWidget *widget, ApplicationContext* context);
 static void doStopButtonCallback(GtkWidget *widget, ApplicationContext* context);
 static void doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context);
 static void doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context);
+static void doLoadButtonCallback(GtkWidget *widget, ApplicationContext* data);
 
 void
 activate(GtkApplication *app, gpointer user_data)
@@ -106,6 +107,7 @@ createLeftPane()
     GtkWidget* button_stop;
     GtkWidget* button_update;
     GtkWidget* button_save;
+    GtkWidget* button_load;
 
     GtkWidget* text_edit_text_view;
     GtkWidget* error_reporting_text_view;
@@ -115,7 +117,7 @@ createLeftPane()
     grid = gtk_grid_new();
     text_editing_area = createTextEditingArea(&text_edit_text_view);
     control_button_area = createControlButtonArea(&button_run, &button_stop,
-            &button_update, &button_save);
+            &button_update, &button_save, &button_load);
     error_reporting_area = createErrorReportingArea(
             &error_reporting_text_view);
 
@@ -135,6 +137,8 @@ createLeftPane()
             G_CALLBACK(doUpdateButtonCallback), context);
     g_signal_connect(button_save, "clicked",
             G_CALLBACK(doSaveButtonCallback), context);
+    g_signal_connect(button_load, "clicked",
+            G_CALLBACK(doLoadButtonCallback), context);
 
     return grid;
 }
@@ -166,7 +170,7 @@ createTextEditingArea(GtkWidget **text_view)
 
 static GtkWidget*
 createControlButtonArea(GtkWidget **button_run, GtkWidget **button_stop,
-        GtkWidget **button_update, GtkWidget **button_save)
+        GtkWidget **button_update, GtkWidget **button_save, GtkWidget **button_load)
 {
     GtkWidget* hbox;
 
@@ -176,11 +180,13 @@ createControlButtonArea(GtkWidget **button_run, GtkWidget **button_stop,
     *button_stop   = gtk_button_new_with_label("Stop");
     *button_update = gtk_button_new_with_label("Update");
     *button_save   = gtk_button_new_with_label("Save");
+    *button_load   = gtk_button_new_with_label("Load");
 
     gtk_box_pack_start(GTK_BOX(hbox),    *button_run, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox),   *button_stop, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), *button_update, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox),   *button_save, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),   *button_load, TRUE, TRUE, 0);
 
     return hbox;
 }
@@ -327,4 +333,62 @@ doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context)
 
     gtk_text_buffer_set_text(error_reporting_text_buffer,
             "File saved successfully.", -1);
+}
+
+static void
+doLoadButtonCallback(GtkWidget *widget, ApplicationContext* context)
+{
+    GtkTextBuffer* text_edit_text_buffer;
+    GtkTextBuffer* error_reporting_text_buffer;
+
+    int error_value;
+
+    FILE* file_ptr;
+    long num_bytes;
+
+    char* file_buffer;
+
+    text_edit_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->text_edit_text_view));
+
+    error_reporting_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "Loading file.", -1);
+
+    file_ptr = fopen("saved.txt", "r");
+
+    if (file_ptr == NULL)
+    {
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                "Could not open the file for reading.", -1);
+        return;
+    }
+
+    // actually load the contents of the tile into memory
+
+    fseek(file_ptr, 0L, SEEK_END);
+    num_bytes = ftell(file_ptr);
+    fseek(file_ptr, 0L, SEEK_SET);
+
+    file_buffer = (char*) calloc(num_bytes, sizeof(char));
+
+    if (file_buffer == NULL)
+    {
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                "Error allocating memory for file.", -1);
+        fclose(file_ptr);
+        return;
+    }
+
+    fread(file_buffer, sizeof(char), num_bytes, file_ptr);
+
+    fclose(file_ptr);
+
+    gtk_text_buffer_set_text(text_edit_text_buffer,
+            file_buffer, -1);
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "File loaded successfully.", -1);
 }
