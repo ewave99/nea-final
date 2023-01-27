@@ -324,4 +324,7 @@ doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context)
     fclose(file_ptr);
 
     g_free(text_edit_text_buffer_text);
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "File saved successfully.", -1);
 }
