@@ -21,25 +21,37 @@ typedef struct
 }
 VisualModule;
 
+typedef struct
+{
+    int src_module_index;
+    int src_module_output_index;
+    int dst_module_index;
+    int dst_module_input_index;
+} Connection;
+
 static void doDrawing(cairo_t *canvas);
 
 static const VisualModule items[2] = {
     {
-        { 100, 100, 200, 200 },
+        { 400, 100, 200, 100 },
         { 0, 1, 1 },
         { 0, 0, 0.7 },
         "OSCILLATOR",
-        2, { "freq", "other" },
+        0, { },
         1, { "out" }
     },
     {
-        { 500, 500, 150, 80 },
+        { 400, 500, 300, 200 },
         { 1, 0.5, 0 },
         { 0.4, 0, 0 },
-        "CLOCK",
-        0, { },
+        "MIXER",
+        4, { "in0", "in1", "in2", "in3" },
         1, { "out" }
     }
+};
+
+static const Connection connections[1] = {
+    { 0, 0, 1, 1 }
 };
 
 static int DRAWING = 0;
@@ -62,6 +74,7 @@ drawModuleRectangle(cairo_t *canvas, Rect rect, double fill_colour[3],
             rect.y,
             rect.w,
             rect.h);
+
     cairo_set_source_rgb(canvas,
             line_colour[0],
             line_colour[1],
@@ -93,6 +106,48 @@ displayModuleName(cairo_t *canvas, Rect module_rect, double line_colour[3],
 }
 
 static void
+drawInputsOfModule(cairo_t *canvas, Rect module_rect, double line_colour[3],
+        double font_size, int num_inputs, char input_names[8][16])
+{
+    cairo_set_source_rgb(canvas,
+            line_colour[0],
+            line_colour[1],
+            line_colour[2]);
+    cairo_select_font_face(canvas, "Times New Roman",
+            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(canvas, font_size);
+
+    for (int input = 0; input < num_inputs; input ++)
+    {
+        cairo_move_to(canvas,
+                module_rect.x + module_rect.w / num_inputs * input,
+                module_rect.y + font_size);
+        cairo_show_text(canvas, input_names[input]);
+    }
+}
+
+static void
+drawOutputsOfModule(cairo_t *canvas, Rect module_rect, double line_colour[3],
+        double font_size, int num_outputs, char output_names[8][16])
+{
+    cairo_set_source_rgb(canvas,
+            line_colour[0],
+            line_colour[1],
+            line_colour[2]);
+    cairo_select_font_face(canvas, "Times New Roman",
+            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(canvas, font_size);
+
+    for (int output = 0; output < num_outputs; output ++)
+    {
+        cairo_move_to(canvas,
+                module_rect.x + module_rect.w / num_outputs * output,
+                module_rect.y + module_rect.h);
+        cairo_show_text(canvas, output_names[output]);
+    }
+}
+
+static void
 doDrawing(cairo_t *canvas)
 {
     if (DRAWING) {
@@ -108,35 +163,44 @@ doDrawing(cairo_t *canvas)
             displayModuleName(canvas, items[i].rect, items[i].line_colour,
                     font_size, items[i].module_name);
             
-            cairo_set_source_rgb(canvas,
-                    items[i].line_colour[0],
-                    items[i].line_colour[1],
-                    items[i].line_colour[2]
-                    );
-            cairo_select_font_face(canvas, "Times New Roman",
-                    CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-            cairo_set_font_size(canvas, font_size);
+            drawInputsOfModule(canvas, items[i].rect, items[i].line_colour,
+                    font_size, items[i].num_inputs, items[i].inputs);
 
-            // draw inputs
-            for (int input = 0; input < items[i].num_inputs; input ++)
-            {
-                cairo_move_to(canvas,
-                        items[i].rect.x + font_size * 5 * input,
-                        items[i].rect.y + font_size);
-                cairo_show_text(canvas, items[i].inputs[input]);
-            }
-
-            // draw outputs
-            for (int output = 0; output < items[i].num_outputs; output ++)
-            {
-                cairo_move_to(canvas,
-                        items[i].rect.x + font_size * 5 * output,
-                        items[i].rect.y + items[i].rect.h);
-                cairo_show_text(canvas, items[i].outputs[output]);
-            }
+            drawOutputsOfModule(canvas, items[i].rect, items[i].line_colour,
+                    font_size, items[i].num_outputs, items[i].outputs);
 
             i ++;
         }
+
+        //draw connection(s)
+        int connection_index;
+        double start_x, start_y;
+        double end_x, end_y;
+        VisualModule src_module;
+        VisualModule dst_module;
+
+        // just for now
+        connection_index = 0;
+
+        src_module = items[connections[connection_index].src_module_index];
+        start_x = src_module.rect.x + src_module.rect.w
+            / src_module.num_outputs
+            * connections[connection_index].src_module_output_index;
+        start_y = src_module.rect.y + src_module.rect.h;
+
+        dst_module = items[connections[connection_index].dst_module_index];
+        end_x = dst_module.rect.x + dst_module.rect.w
+            / dst_module.num_inputs
+            * connections[connection_index].dst_module_input_index;
+        end_y = dst_module.rect.y;
+
+        //DRAW A LINE USING THESE VALUES
+        cairo_set_source_rgb(canvas, 0, 0, 0);
+        cairo_set_line_width(canvas, 1);
+        cairo_move_to(canvas, start_x, start_y);
+        cairo_line_to(canvas, end_x, end_y);
+        cairo_stroke(canvas);
+
         DRAWING = 0;
     }
     else
