@@ -1,25 +1,6 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
-
-typedef struct {
-    int x;
-    int y;
-    int w;
-    int h;
-} Rect;
-
-typedef struct
-{
-    char module_name[16];
-    Rect rect;
-    double fill_colour[3];
-    double line_colour[3];
-    int num_inputs;
-    char inputs[8][16];
-    int num_outputs;
-    char outputs[8][16];
-}
-VisualModule;
+#include "visuals.h"
 
 typedef struct
 {
@@ -31,7 +12,11 @@ typedef struct
 
 static void doDrawing(cairo_t *canvas);
 
-static const int NUM_MODULES = 2;
+static const int NUM_MODULES = 1;
+static const AbstractModule abstract_modules[1] = {
+    { M_SINOSC }
+};
+/*
 static const VisualModule items[2] = {
     {
         "OSCILLATOR",
@@ -50,12 +35,13 @@ static const VisualModule items[2] = {
         1, { "out" }
     }
 };
+*/
 
-static const int NUM_CONNECTIONS = 2;
-static const Connection connections[2] = {
-    { 0, 0, 1, 0 },
-    { 0, 0, 1, 1 }
-};
+//static const int NUM_CONNECTIONS = 2;
+//static const Connection connections[2] = {
+//    { 0, 0, 1, 0 },
+//    { 0, 0, 1, 1 }
+//};
 
 static int DRAWING = 0;
 
@@ -150,6 +136,23 @@ drawOutputsOfModule(cairo_t *canvas, Rect module_rect, double line_colour[3],
 }
 
 static void
+drawModule(cairo_t *canvas, VisualModule module, double font_size)
+{
+    drawModuleRectangle(canvas, module.rect, module.fill_colour,
+            module.line_colour);
+
+    displayModuleName(canvas, module.rect, module.line_colour,
+            font_size, module.module_name);
+    
+    drawInputsOfModule(canvas, module.rect, module.line_colour,
+            font_size, module.num_inputs, module.inputs);
+
+    drawOutputsOfModule(canvas, module.rect, module.line_colour,
+            font_size, module.num_outputs, module.outputs);
+}
+
+/*
+static void
 drawConnection(cairo_t *canvas, Connection connection)
 {
     double start_x, start_y;
@@ -175,33 +178,28 @@ drawConnection(cairo_t *canvas, Connection connection)
     cairo_line_to(canvas, end_x, end_y);
     cairo_stroke(canvas);
 }
+*/
 
 static void
 doDrawing(cairo_t *canvas)
 {
     if (DRAWING) {
-        int limit = 2;
         double font_size = 20;
 
-        for (int i = 0; i < limit; i ++)
+        for (int i = 0; i < NUM_MODULES; i ++)
         {
-            drawModuleRectangle(canvas, items[i].rect, items[i].fill_colour,
-                    items[i].line_colour);
-
-            displayModuleName(canvas, items[i].rect, items[i].line_colour,
-                    font_size, items[i].module_name);
-            
-            drawInputsOfModule(canvas, items[i].rect, items[i].line_colour,
-                    font_size, items[i].num_inputs, items[i].inputs);
-
-            drawOutputsOfModule(canvas, items[i].rect, items[i].line_colour,
-                    font_size, items[i].num_outputs, items[i].outputs);
+            //draw the module
+            drawModule(canvas,
+                    convertAbstractModuleToVisualModule(abstract_modules[i]),
+                    font_size);
         }
 
+        /*
         for (int c_index = 0; c_index < NUM_CONNECTIONS; c_index ++)
         {
             drawConnection(canvas, connections[c_index]);
         }
+        */
 
         DRAWING = 0;
     }
