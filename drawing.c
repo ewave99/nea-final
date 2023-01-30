@@ -14,7 +14,9 @@ typedef struct
     double fill_colour[3];
     double line_colour[3];
     char module_name[16];
+    int num_inputs;
     char inputs[8][16];
+    int num_outputs;
     char outputs[8][16];
 }
 VisualModule;
@@ -27,16 +29,16 @@ static const VisualModule items[2] = {
         { 0, 1, 1 },
         { 0, 0, 0.7 },
         "OSCILLATOR",
-        { },
-        { "out" }
+        2, { "freq", "other" },
+        1, { "out" }
     },
     {
-        { 500, 500, 100, 50 },
+        { 500, 500, 150, 80 },
         { 1, 0.5, 0 },
         { 0.4, 0, 0 },
         "CLOCK",
-        { },
-        { "out" }
+        0, { },
+        1, { "out" }
     }
 };
 
@@ -95,7 +97,7 @@ doDrawing(cairo_t *canvas)
 {
     if (DRAWING) {
         int limit = 2;
-        int font_size = 20;
+        double font_size = 20;
 
         int i = 0;
         while (i < limit)
@@ -105,6 +107,33 @@ doDrawing(cairo_t *canvas)
 
             displayModuleName(canvas, items[i].rect, items[i].line_colour,
                     font_size, items[i].module_name);
+            
+            cairo_set_source_rgb(canvas,
+                    items[i].line_colour[0],
+                    items[i].line_colour[1],
+                    items[i].line_colour[2]
+                    );
+            cairo_select_font_face(canvas, "Times New Roman",
+                    CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+            cairo_set_font_size(canvas, font_size);
+
+            // draw inputs
+            for (int input = 0; input < items[i].num_inputs; input ++)
+            {
+                cairo_move_to(canvas,
+                        items[i].rect.x + font_size * 5 * input,
+                        items[i].rect.y + font_size);
+                cairo_show_text(canvas, items[i].inputs[input]);
+            }
+
+            // draw outputs
+            for (int output = 0; output < items[i].num_outputs; output ++)
+            {
+                cairo_move_to(canvas,
+                        items[i].rect.x + font_size * 5 * output,
+                        items[i].rect.y + items[i].rect.h);
+                cairo_show_text(canvas, items[i].outputs[output]);
+            }
 
             i ++;
         }
