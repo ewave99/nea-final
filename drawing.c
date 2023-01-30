@@ -15,6 +15,8 @@ static const int RECTS[][4] = {
     {  0,   0,   0,   0 }
 };
 
+static int DRAWING = 0;
+
 
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas,
@@ -28,16 +30,23 @@ onDrawEvent(GtkWidget *widget, cairo_t *canvas,
 static void
 doDrawing(cairo_t *canvas)
 {
-    cairo_set_source_rgb(canvas, 255, 0, 0);
+    if (DRAWING) {
+        cairo_set_source_rgb(canvas, 255, 0, 0);
 
-    gint i = 0;
-    while (RECTS[i][2] != 0 && RECTS[i][3] != 0)
+        gint i = 0;
+        while (RECTS[i][2] != 0 && RECTS[i][3] != 0)
+        {
+            cairo_rectangle(canvas, RECTS[i][0], RECTS[i][1], RECTS[i][2],
+                    RECTS[i][3]);
+            cairo_fill(canvas);
+
+            i ++;
+        }
+        DRAWING = 0;
+    }
+    else
     {
-        cairo_rectangle(canvas, RECTS[i][0], RECTS[i][1], RECTS[i][2],
-                RECTS[i][3]);
-        cairo_fill(canvas);
-
-        i ++;
+        DRAWING = 1;
     }
 }
 
