@@ -8,20 +8,19 @@ VisualModule;
 
 static void doDrawing(cairo_t *canvas);
 
-/*
-const int RECTS[][4] = {
+static const int RECTS[][4] = {
     {  0,   0,  40,  40 },
     { 40,  40, 500,  20 },
     { 20, 400, 400, 400 },
     {  0,   0,   0,   0 }
 };
-*/
+
 
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas,
         gpointer user_data)
 {
-//    doDrawing(canvas);
+    doDrawing(canvas);
 
     return FALSE;
 }
@@ -29,7 +28,6 @@ onDrawEvent(GtkWidget *widget, cairo_t *canvas,
 static void
 doDrawing(cairo_t *canvas)
 {
-    /*
     cairo_set_source_rgb(canvas, 255, 0, 0);
 
     gint i = 0;
@@ -41,6 +39,5 @@ doDrawing(cairo_t *canvas)
 
         i ++;
     }
-    */
 }
 

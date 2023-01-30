@@ -22,12 +22,16 @@
 typedef struct {
     GtkWidget *text_edit_text_view;
     GtkWidget *error_reporting_text_view;
+    GtkWidget *drawing_area;
 } ApplicationContext;
 
 void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
-static GtkWidget* createLeftPane();
+static GtkWidget* createLeftPane(GtkWidget **button_run_ptr,
+        GtkWidget **button_stop_ptr, GtkWidget **button_update_ptr,
+        GtkWidget **text_editing_area_view_ptr,
+        GtkWidget **error_reporting_area_view_ptr);
 static GtkWidget* createTextEditingArea(GtkWidget **text_view);
 static GtkWidget* createControlButtonArea(GtkWidget **button_run,
         GtkWidget **button_stop, GtkWidget **button_update,
@@ -63,10 +67,21 @@ static void
 createWindow()
 {
     GdkRectangle screen_dimensions;
+
     GtkWidget *window;
     GtkWidget *grid;
+
     GtkWidget *left_pane;
     GtkWidget *right_pane;
+
+    GtkWidget *button_run;
+    GtkWidget *button_stop;
+    GtkWidget *button_update;
+
+    GtkWidget *text_editing_area_view;
+    GtkWidget *error_reporting_area_view;
+
+    ApplicationContext *context;
 
     screen_dimensions = getScreenDimensions();
 
@@ -80,7 +95,8 @@ createWindow()
 
     grid = gtk_grid_new();
 
-    left_pane = createLeftPane();
+    left_pane = createLeftPane(&button_run, &button_stop, &button_update,
+            &text_editing_area_view, &error_reporting_area_view);
     right_pane = createRightPane();
 
     gtk_grid_attach(GTK_GRID(grid), left_pane, 0, 1, 1, 1);
@@ -91,43 +107,10 @@ createWindow()
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
             NULL);
 
-    gtk_widget_show_all(window);
-}
-
-static GtkWidget*
-createLeftPane()
-{
-    GtkWidget* grid;
-
-    GtkWidget* text_editing_area;
-    GtkWidget* control_button_area;
-    GtkWidget* error_reporting_area;
-
-    GtkWidget* button_run;
-    GtkWidget* button_stop;
-    GtkWidget* button_update;
-    GtkWidget* button_save;
-    GtkWidget* button_load;
-
-    GtkWidget* text_edit_text_view;
-    GtkWidget* error_reporting_text_view;
-
-    ApplicationContext* context;
-
-    grid = gtk_grid_new();
-    text_editing_area = createTextEditingArea(&text_edit_text_view);
-    control_button_area = createControlButtonArea(&button_run, &button_stop,
-            &button_update, &button_save, &button_load);
-    error_reporting_area = createErrorReportingArea(
-            &error_reporting_text_view);
-
-    gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
-
     context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
-    context->text_edit_text_view = text_edit_text_view;
-    context->error_reporting_text_view = error_reporting_text_view;
+    context->text_edit_text_view = text_editing_area_view;
+    context->error_reporting_text_view = error_reporting_area_view;
+    context->drawing_area = right_pane;
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
@@ -135,6 +118,41 @@ createLeftPane()
             G_CALLBACK(doStopButtonCallback), context);
     g_signal_connect(button_update, "clicked",
             G_CALLBACK(doUpdateButtonCallback), context);
+
+    gtk_widget_show_all(window);
+}
+
+static GtkWidget*
+createLeftPane(GtkWidget **button_run_ptr, GtkWidget** button_stop_ptr,
+        GtkWidget **button_update_ptr, GtkWidget **text_editing_area_view_ptr,
+        GtkWidget **error_reporting_area_view_ptr)
+{
+    GtkWidget* grid;
+
+    GtkWidget* text_editing_area;
+    GtkWidget* control_button_area;
+    GtkWidget* error_reporting_area;
+
+    GtkWidget* button_save;
+    GtkWidget* button_load;
+
+    ApplicationContext* context;
+
+    grid = gtk_grid_new();
+    text_editing_area = createTextEditingArea(text_editing_area_view_ptr);
+    control_button_area = createControlButtonArea(button_run_ptr,
+            button_stop_ptr, button_update_ptr, &button_save, &button_load);
+    error_reporting_area = createErrorReportingArea(
+            error_reporting_area_view_ptr);
+
+    gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
+
+    context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
+    context->text_edit_text_view = *text_editing_area_view_ptr;
+    context->error_reporting_text_view = *error_reporting_area_view_ptr;
+
     g_signal_connect(button_save, "clicked",
             G_CALLBACK(doSaveButtonCallback), context);
     g_signal_connect(button_load, "clicked",
@@ -232,7 +250,9 @@ createRightPane()
 
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(onDrawEvent),
             NULL);
-    gtk_widget_queue_draw(drawing_area);
+    //this is what actually makes it draw. We don't want it to draw anything
+    //right at the beginning.
+    //gtk_widget_queue_draw(drawing_area);
 
     return drawing_area;
 }
@@ -247,6 +267,10 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
 
     GtkTextBuffer* error_reporting_text_buffer;
 
+    error_reporting_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    /*
     text_edit_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->text_edit_text_view));
 
@@ -257,8 +281,60 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
             text_edit_text_buffer, &text_edit_buffer_start,
             &text_edit_buffer_end, FALSE);
 
+    ParseResult result = processText(text_edit_text_buffer_text);
+
+    if (result.error_code != 0)
+    {
+        gtk_text_buffer_set_text(error_reporting_text_buffer,
+                result.error_message, -1);
+        g_free(text_edit_text_buffer_text);
+        return;
+    }
+
+    g_free(text_edit_text_buffer_text);
+    */
+
+    gtk_widget_queue_draw(context->drawing_area);
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "Run successfully.", -1);
+}
+
+static void
+doStopButtonCallback(GtkWidget *widget, ApplicationContext* context)
+{
+    GtkTextBuffer* error_reporting_text_buffer;
+
     error_reporting_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "Stopped successfully.", -1);
+}
+
+static void
+doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context)
+{
+    GtkTextBuffer* text_edit_text_buffer;
+    GtkTextIter text_edit_buffer_start;
+    GtkTextIter text_edit_buffer_end;
+    gchar* text_edit_text_buffer_text;
+
+    GtkTextBuffer* error_reporting_text_buffer;
+
+    error_reporting_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->error_reporting_text_view));
+
+    /*
+    text_edit_text_buffer = gtk_text_view_get_buffer(
+            GTK_TEXT_VIEW(context->text_edit_text_view));
+
+    gtk_text_buffer_get_bounds(text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end);
+
+    text_edit_text_buffer_text = gtk_text_buffer_get_text(
+            text_edit_text_buffer, &text_edit_buffer_start,
+            &text_edit_buffer_end, FALSE);
 
     ParseResult result = processText(text_edit_text_buffer_text);
 
@@ -266,19 +342,17 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
     {
         gtk_text_buffer_set_text(error_reporting_text_buffer,
                 result.error_message, -1);
+        g_free(text_edit_text_buffer_text);
+        return;
     }
 
     g_free(text_edit_text_buffer_text);
-}
+    */
 
-static void
-doStopButtonCallback(GtkWidget *widget, ApplicationContext* data)
-{
-}
+    gtk_widget_queue_draw(context->drawing_area);
 
-static void
-doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* data)
-{
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            "Updated successfully.", -1);
 }
 
 static void
