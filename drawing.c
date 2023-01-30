@@ -10,10 +10,10 @@ typedef struct {
 
 typedef struct
 {
+    char module_name[16];
     Rect rect;
     double fill_colour[3];
     double line_colour[3];
-    char module_name[16];
     int num_inputs;
     char inputs[8][16];
     int num_outputs;
@@ -31,34 +31,36 @@ typedef struct
 
 static void doDrawing(cairo_t *canvas);
 
+static const int NUM_MODULES = 2;
 static const VisualModule items[2] = {
     {
+        "OSCILLATOR",
         { 400, 100, 200, 100 },
         { 0, 1, 1 },
         { 0, 0, 0.7 },
-        "OSCILLATOR",
         0, { },
         1, { "out" }
     },
     {
+        "MIXER",
         { 400, 500, 300, 200 },
         { 1, 0.5, 0 },
         { 0.4, 0, 0 },
-        "MIXER",
         4, { "in0", "in1", "in2", "in3" },
         1, { "out" }
     }
 };
 
-static const Connection connections[1] = {
+static const int NUM_CONNECTIONS = 2;
+static const Connection connections[2] = {
+    { 0, 0, 1, 0 },
     { 0, 0, 1, 1 }
 };
 
 static int DRAWING = 0;
 
 gboolean
-onDrawEvent(GtkWidget *widget, cairo_t *canvas,
-        gpointer user_data)
+onDrawEvent(GtkWidget *widget, cairo_t *canvas, gpointer user_data)
 {
     doDrawing(canvas);
 
@@ -148,14 +150,40 @@ drawOutputsOfModule(cairo_t *canvas, Rect module_rect, double line_colour[3],
 }
 
 static void
+drawConnection(cairo_t *canvas, Connection connection)
+{
+    double start_x, start_y;
+    double end_x, end_y;
+    VisualModule src_module;
+    VisualModule dst_module;
+
+    src_module = items[connection.src_module_index];
+    start_x = src_module.rect.x + src_module.rect.w
+        / src_module.num_outputs
+        * connection.src_module_output_index;
+    start_y = src_module.rect.y + src_module.rect.h;
+
+    dst_module = items[connection.dst_module_index];
+    end_x = dst_module.rect.x + dst_module.rect.w
+        / dst_module.num_inputs
+        * connection.dst_module_input_index;
+    end_y = dst_module.rect.y;
+
+    cairo_set_source_rgb(canvas, 0, 0, 0);
+    cairo_set_line_width(canvas, 1);
+    cairo_move_to(canvas, start_x, start_y);
+    cairo_line_to(canvas, end_x, end_y);
+    cairo_stroke(canvas);
+}
+
+static void
 doDrawing(cairo_t *canvas)
 {
     if (DRAWING) {
         int limit = 2;
         double font_size = 20;
 
-        int i = 0;
-        while (i < limit)
+        for (int i = 0; i < limit; i ++)
         {
             drawModuleRectangle(canvas, items[i].rect, items[i].fill_colour,
                     items[i].line_colour);
@@ -168,38 +196,12 @@ doDrawing(cairo_t *canvas)
 
             drawOutputsOfModule(canvas, items[i].rect, items[i].line_colour,
                     font_size, items[i].num_outputs, items[i].outputs);
-
-            i ++;
         }
 
-        //draw connection(s)
-        int connection_index;
-        double start_x, start_y;
-        double end_x, end_y;
-        VisualModule src_module;
-        VisualModule dst_module;
-
-        // just for now
-        connection_index = 0;
-
-        src_module = items[connections[connection_index].src_module_index];
-        start_x = src_module.rect.x + src_module.rect.w
-            / src_module.num_outputs
-            * connections[connection_index].src_module_output_index;
-        start_y = src_module.rect.y + src_module.rect.h;
-
-        dst_module = items[connections[connection_index].dst_module_index];
-        end_x = dst_module.rect.x + dst_module.rect.w
-            / dst_module.num_inputs
-            * connections[connection_index].dst_module_input_index;
-        end_y = dst_module.rect.y;
-
-        //DRAW A LINE USING THESE VALUES
-        cairo_set_source_rgb(canvas, 0, 0, 0);
-        cairo_set_line_width(canvas, 1);
-        cairo_move_to(canvas, start_x, start_y);
-        cairo_line_to(canvas, end_x, end_y);
-        cairo_stroke(canvas);
+        for (int c_index = 0; c_index < NUM_CONNECTIONS; c_index ++)
+        {
+            drawConnection(canvas, connections[c_index]);
+        }
 
         DRAWING = 0;
     }
