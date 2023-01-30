@@ -1,22 +1,29 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
+typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+} Rect;
+
 typedef struct
 {
+    Rect rect;
+    double fill_colour[3];
+    double line_colour[3];
+    char module_name[16];
 }
 VisualModule;
 
 static void doDrawing(cairo_t *canvas);
 
-static const int RECTS[][4] = {
-    {  0,   0,  40,  40 },
-    { 40,  40, 500,  20 },
-    { 20, 400, 400, 400 },
-    {  0,   0,   0,   0 }
+static const VisualModule items[1] = {
+    { { 100, 100, 200, 200 }, { 0, 1, 1 }, { 0, 0, 0.7 }, "OSCILLATOR" }
 };
 
 static int DRAWING = 0;
-
 
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas,
@@ -31,14 +38,40 @@ static void
 doDrawing(cairo_t *canvas)
 {
     if (DRAWING) {
-        cairo_set_source_rgb(canvas, 255, 0, 0);
+        int limit = 1;
+        int font_size = 20;
 
-        gint i = 0;
-        while (RECTS[i][2] != 0 && RECTS[i][3] != 0)
+        int i = 0;
+        while (i < limit)
         {
-            cairo_rectangle(canvas, RECTS[i][0], RECTS[i][1], RECTS[i][2],
-                    RECTS[i][3]);
+            cairo_rectangle(canvas,
+                    items[i].rect.x,
+                    items[i].rect.y,
+                    items[i].rect.w,
+                    items[i].rect.h);
+            cairo_set_source_rgb(canvas,
+                    items[i].line_colour[0],
+                    items[i].line_colour[1],
+                    items[i].line_colour[2]);
+            cairo_stroke_preserve(canvas);
+
+            cairo_set_source_rgb(canvas,
+                    items[i].fill_colour[0],
+                    items[i].fill_colour[1],
+                    items[i].fill_colour[2]);
             cairo_fill(canvas);
+
+            cairo_set_source_rgb(canvas,
+                    items[i].line_colour[0],
+                    items[i].line_colour[1],
+                    items[i].line_colour[2]);
+            cairo_select_font_face(canvas, "Times New Roman",
+                    CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+            cairo_set_font_size(canvas, font_size);
+            cairo_move_to(canvas,
+                    items[i].rect.x + font_size,
+                    items[i].rect.y + font_size * 2);
+            cairo_show_text(canvas, items[i].module_name);
 
             i ++;
         }
