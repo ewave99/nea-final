@@ -24,13 +24,6 @@ static int DRAWING = 0;
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
 {
-    if (context->visual_modules != NULL)
-        free(context->visual_modules);
-    context->visual_modules = (VisualModule*) malloc(sizeof(VisualModule)
-            * context->num_modules);
-    if (context->visual_modules == NULL)
-        return FALSE;
-
     convertAbstractModulesToVisualModules(context->num_modules,
             context->abstract_modules, context->visual_modules);
 

@@ -112,6 +112,8 @@ createWindow()
             sizeof(AbstractModule) * context->num_modules);
     context->abstract_modules[0] = (AbstractModule){ M_SINOSC };
     context->abstract_modules[1] = (AbstractModule){ M_MIXER };
+    context->visual_modules = (VisualModule*) malloc(
+            sizeof(VisualModule) * context->num_modules);
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
