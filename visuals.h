@@ -40,5 +40,6 @@ typedef struct
 }
 VisualModule;
 
-VisualModule convertAbstractModuleToVisualModule(
-        AbstractModule abstract_module);
+void convertAbstractModulesToVisualModules(int num_modules,
+        AbstractModule* abstract_modules, VisualModule* visual_modules);
+

@@ -2,6 +2,7 @@
 #include <cairo/cairo.h>
 #include "drawing.h"
 #include "text.h"
+#include "application.h"
 
 /*
     GUI HIERARCHY:
@@ -18,12 +19,6 @@
            |             |-> area for error reporting (non-editable)
            |-> right pane (drawing area)
 */
-
-typedef struct {
-    GtkWidget *text_edit_text_view;
-    GtkWidget *error_reporting_text_view;
-    GtkWidget *drawing_area;
-} ApplicationContext;
 
 void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
@@ -112,12 +107,24 @@ createWindow()
     context->error_reporting_text_view = error_reporting_area_view;
     context->drawing_area = right_pane;
 
+    context->num_modules = 2;
+    context->abstract_modules = (AbstractModule*) malloc(
+            sizeof(AbstractModule) * context->num_modules);
+    context->abstract_modules[0] = (AbstractModule){ M_SINOSC };
+    context->abstract_modules[1] = (AbstractModule){ M_MIXER };
+
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
     g_signal_connect(button_stop, "clicked",
             G_CALLBACK(doStopButtonCallback), context);
     g_signal_connect(button_update, "clicked",
             G_CALLBACK(doUpdateButtonCallback), context);
+
+    g_signal_connect(G_OBJECT(right_pane), "draw", G_CALLBACK(onDrawEvent),
+            context);
+    //this is what actually makes it draw. We don't want it to draw anything
+    //right at the beginning.
+    //gtk_widget_queue_draw(drawing_area);
 
     gtk_widget_show_all(window);
 }
@@ -248,22 +255,18 @@ createRightPane()
     gtk_widget_set_size_request(drawing_area, screen_dimensions.width / 2,
             screen_dimensions.height);
 
-    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(onDrawEvent),
-            NULL);
-    //this is what actually makes it draw. We don't want it to draw anything
-    //right at the beginning.
-    //gtk_widget_queue_draw(drawing_area);
-
     return drawing_area;
 }
 
 static void
 doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
+    /*
     GtkTextBuffer* text_edit_text_buffer;
     GtkTextIter text_edit_buffer_start;
     GtkTextIter text_edit_buffer_end;
     gchar* text_edit_text_buffer_text;
+    */
 
     GtkTextBuffer* error_reporting_text_buffer;
 
@@ -315,10 +318,12 @@ doStopButtonCallback(GtkWidget *widget, ApplicationContext* context)
 static void
 doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
+    /*
     GtkTextBuffer* text_edit_text_buffer;
     GtkTextIter text_edit_buffer_start;
     GtkTextIter text_edit_buffer_end;
     gchar* text_edit_text_buffer_text;
+    */
 
     GtkTextBuffer* error_reporting_text_buffer;
 
@@ -395,7 +400,7 @@ doSaveButtonCallback(GtkWidget *widget, ApplicationContext* context)
         return;
     }
 
-    error_value = fprintf(file_ptr, text_edit_text_buffer_text);
+    error_value = fprintf(file_ptr, "%s", text_edit_text_buffer_text);
     
     if (error_value < 0)
         gtk_text_buffer_set_text(error_reporting_text_buffer,

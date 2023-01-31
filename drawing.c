@@ -1,6 +1,7 @@
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
-#include "visuals.h"
+#include <application.h>
 
 typedef struct
 {
@@ -10,32 +11,7 @@ typedef struct
     int dst_module_input_index;
 } Connection;
 
-static void doDrawing(cairo_t *canvas);
-
-static const int NUM_MODULES = 1;
-static const AbstractModule abstract_modules[1] = {
-    { M_SINOSC }
-};
-/*
-static const VisualModule items[2] = {
-    {
-        "OSCILLATOR",
-        { 400, 100, 200, 100 },
-        { 0, 1, 1 },
-        { 0, 0, 0.7 },
-        0, { },
-        1, { "out" }
-    },
-    {
-        "MIXER",
-        { 400, 500, 300, 200 },
-        { 1, 0.5, 0 },
-        { 0.4, 0, 0 },
-        4, { "in0", "in1", "in2", "in3" },
-        1, { "out" }
-    }
-};
-*/
+static void doDrawing(cairo_t *canvas, ApplicationContext *context);
 
 //static const int NUM_CONNECTIONS = 2;
 //static const Connection connections[2] = {
@@ -46,9 +22,19 @@ static const VisualModule items[2] = {
 static int DRAWING = 0;
 
 gboolean
-onDrawEvent(GtkWidget *widget, cairo_t *canvas, gpointer user_data)
+onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
 {
-    doDrawing(canvas);
+    if (context->visual_modules != NULL)
+        free(context->visual_modules);
+    context->visual_modules = (VisualModule*) malloc(sizeof(VisualModule)
+            * context->num_modules);
+    if (context->visual_modules == NULL)
+        return FALSE;
+
+    convertAbstractModulesToVisualModules(context->num_modules,
+            context->abstract_modules, context->visual_modules);
+
+    doDrawing(canvas, context);
 
     return FALSE;
 }
@@ -181,17 +167,19 @@ drawConnection(cairo_t *canvas, Connection connection)
 */
 
 static void
-doDrawing(cairo_t *canvas)
+doDrawing(cairo_t *canvas, ApplicationContext *context)
 {
+    if (context->num_modules == 0)
+        return;
+    if (context->visual_modules == NULL)
+        return;
+
     if (DRAWING) {
         double font_size = 20;
 
-        for (int i = 0; i < NUM_MODULES; i ++)
+        for (int i = 0; i < context->num_modules; i ++)
         {
-            //draw the module
-            drawModule(canvas,
-                    convertAbstractModuleToVisualModule(abstract_modules[i]),
-                    font_size);
+            drawModule(canvas, context->visual_modules[i], font_size);
         }
 
         /*

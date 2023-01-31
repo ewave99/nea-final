@@ -1,27 +1,7 @@
 #include <string.h>
-#include "drawing.h"
+#include "visuals.h"
 
-typedef enum {
-    M_SINOSC,
-    M_SQUOSC,
-    M_TRIOSC,
-    M_SAWOSC,
-    M_CLOCK,
-    M_SEQUENCER,
-    M_ENVELOPE,
-    M_MIXER,
-    M_LPF,
-    M_HPF,
-    M_REVERB,
-    M_AUDIOFILE
-} ModuleType;
-
-typedef struct
-{
-    ModuleType module_type;
-} AbstractModule;
-
-VisualModule
+static VisualModule
 convertAbstractModuleToVisualModule(AbstractModule abstract_module)
 {
     VisualModule visual_module;
@@ -42,7 +22,7 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
             visual_module.line_colour[2] = 86.0 / 256;
 
             visual_module.rect = (Rect){
-                .x = 0,
+                .x = 300,
                 .y = 0,
                 .w = 300,
                 .h = 100
@@ -60,7 +40,35 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
         //case M_CLOCK:
         //case M_SEQUENCER:
         //case M_ENVELOPE:
-        //case M_MIXER:
+        case M_MIXER:
+            strcpy(visual_module.module_name, "MIXER");
+
+            //fill colour: #e1d5e7 = (225.0, 213.0, 231.0)
+            visual_module.fill_colour[0] = 225.0 / 256;
+            visual_module.fill_colour[1] = 213.0 / 256;
+            visual_module.fill_colour[2] = 231.0 / 256;
+
+            //line colour: #9673a6 = (150, 115, 166)
+            visual_module.line_colour[0] = 150.0 / 256;
+            visual_module.line_colour[1] = 115.0 / 256;
+            visual_module.line_colour[2] = 166.0 / 256;
+
+            visual_module.rect = (Rect){
+                .x = 300,
+                .y = 600,
+                .w = 300,
+                .h = 100
+            };
+
+            visual_module.num_inputs = 4;
+            strcpy(visual_module.inputs[0], "in0");
+            strcpy(visual_module.inputs[1], "in1");
+            strcpy(visual_module.inputs[2], "in2");
+            strcpy(visual_module.inputs[3], "in3");
+
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
         //case M_LPF:
         //case M_HPF:
         //case M_REVERB:
@@ -87,4 +95,13 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
     }
 
     return visual_module;
+}
+
+void
+convertAbstractModulesToVisualModules(int num_modules,
+        AbstractModule* abstract_modules, VisualModule* visual_modules)
+{
+    for (int i = 0; i < num_modules; i ++)
+        visual_modules[i] = convertAbstractModuleToVisualModule(
+                abstract_modules[i]);
 }
