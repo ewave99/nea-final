@@ -43,55 +43,137 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
             setModuleName(&visual_module, "SINE OSCILLATOR");
             setModuleFillColour256(&visual_module, 255., 242., 204.);
             setModuleLineColour256(&visual_module, 214., 182., 86.);
-            setModuleRect(&visual_module, 300, 0, 300, 100);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
             visual_module.num_inputs = 0;
             visual_module.num_outputs = 1;
             strcpy(visual_module.outputs[0], "out");
             break;
-            
-        //case M_SQUOSC:
-        //case M_TRIOSC:
-        //case M_SAWOSC:
-        //case M_CLOCK:
-        //case M_SEQUENCER:
-        //case M_ENVELOPE:
+        case M_SQUOSC:
+            setModuleName(&visual_module, "SQUARE OSCILLATOR");
+            setModuleFillColour256(&visual_module, 255., 242., 204.);
+            setModuleLineColour256(&visual_module, 214., 182., 86.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 0;
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_TRIOSC:
+            setModuleName(&visual_module, "TRIANGLE OSCILLATOR");
+            setModuleFillColour256(&visual_module, 255., 242., 204.);
+            setModuleLineColour256(&visual_module, 214., 182., 86.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 0;
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_SAWOSC:
+            setModuleName(&visual_module, "SAW OSCILLATOR");
+            setModuleFillColour256(&visual_module, 255., 242., 204.);
+            setModuleLineColour256(&visual_module, 214., 182., 86.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 0;
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_CLOCK:
+            setModuleName(&visual_module, "CLOCK");
+            setModuleFillColour256(&visual_module, 246.0, 148.0, 193.0);
+            setModuleLineColour256(&visual_module, 120.0, 38.0, 130.0);
+            setModuleRect(&visual_module, 0, 0, 200, 100);
+            visual_module.num_inputs = 0;
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_SEQUENCER:
+            setModuleName(&visual_module, "SEQUENCER");
+            setModuleFillColour256(&visual_module, 248.0, 206.0, 204.0);
+            setModuleLineColour256(&visual_module, 184.0, 84.0, 80.0);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "trigger");
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_ENVELOPE:
+            setModuleName(&visual_module, "ENVELOPE");
+            setModuleFillColour256(&visual_module, 218.0, 232.0, 252.0);
+            setModuleLineColour256(&visual_module, 108.0, 142.0, 191.0);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "trigger");
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
         case M_MIXER:
             setModuleName(&visual_module, "MIXER");
             setModuleFillColour256(&visual_module, 225., 213., 231.);
             setModuleLineColour256(&visual_module, 150., 115., 166.);
-            setModuleRect(&visual_module, 300, 600, 300, 100);
-
+            setModuleRect(&visual_module, 0, 0, 300, 100);
             visual_module.num_inputs = 4;
             strcpy(visual_module.inputs[0], "in0");
             strcpy(visual_module.inputs[1], "in1");
             strcpy(visual_module.inputs[2], "in2");
             strcpy(visual_module.inputs[3], "in3");
-
             visual_module.num_outputs = 1;
             strcpy(visual_module.outputs[0], "out");
             break;
-        //case M_LPF:
-        //case M_HPF:
-        //case M_REVERB:
-        //case M_AUDIOFILE:
-        default:
-            strcpy(visual_module.module_name, "UNDEFINED");
-
-            visual_module.fill_colour[0] = 1;
-            visual_module.fill_colour[1] = 1;
-            visual_module.fill_colour[2] = 1;
-
-            visual_module.line_colour[0] = 0;
-            visual_module.line_colour[1] = 0;
-            visual_module.line_colour[2] = 0;
-
-            visual_module.rect = (Rect){ .x = 0, .y = 0, .w = 100, .h = 100 };
-
-            visual_module.num_inputs = 0;
-
+        case M_LPF:
+            setModuleName(&visual_module, "LPF");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "in");
             visual_module.num_outputs = 1;
             strcpy(visual_module.outputs[0], "out");
-
+            break;
+        case M_HPF:
+            setModuleName(&visual_module, "HPF");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "in");
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_REVERB:
+            setModuleName(&visual_module, "REVERB");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "in");
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_AUDIOFILE:
+            setModuleName(&visual_module, "AUDIOFILE");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 0;
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
+            break;
+        case M_SPEAKERS:
+            setModuleName(&visual_module, "SPEAKERS");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "in");
+            visual_module.num_outputs = 0;
+            break;
+        default:
+            setModuleName(&visual_module, "UNDEFINED");
+            setModuleFillColour256(&visual_module, 255., 255., 255.);
+            setModuleLineColour256(&visual_module, 0., 0., 0.);
+            setModuleRect(&visual_module, 0, 0, 300, 100);
+            visual_module.num_inputs = 1;
+            strcpy(visual_module.inputs[0], "in");
+            visual_module.num_outputs = 1;
+            strcpy(visual_module.outputs[0], "out");
             break;
     }
 
@@ -105,4 +187,20 @@ convertAbstractModulesToVisualModules(int num_modules,
     for (int i = 0; i < num_modules; i ++)
         visual_modules[i] = convertAbstractModuleToVisualModule(
                 abstract_modules[i]);
+}
+
+void
+arrangeModulesOnCanvas(int canvas_width, int canvas_height, int num_modules,
+        VisualModule *modules, int num_connections,
+        Connection *connections)
+{
+    int num_vertical_sections = num_modules;
+    int vertical_section_height = canvas_height / num_vertical_sections;
+
+    for (int module_index = 0; module_index < num_modules; module_index ++)
+    {
+        modules[module_index].rect.x = (canvas_width
+                - modules[module_index].rect.w) / 2;
+        modules[module_index].rect.y = vertical_section_height * module_index;
+    }
 }

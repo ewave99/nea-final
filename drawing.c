@@ -10,6 +10,9 @@ onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
 {
     convertAbstractModulesToVisualModules(context->num_modules,
             context->abstract_modules, context->visual_modules);
+    arrangeModulesOnCanvas(context->canvas_width, context->canvas_height,
+            context->num_modules, context->visual_modules,
+            context->num_connections, context->connections);
 
     doDrawing(canvas, context);
 

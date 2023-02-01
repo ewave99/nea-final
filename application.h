@@ -5,6 +5,8 @@ typedef struct {
     GtkWidget *text_edit_text_view;
     GtkWidget *error_reporting_text_view;
     GtkWidget *drawing_area;
+    int canvas_width;
+    int canvas_height;
     int num_modules;
     AbstractModule *abstract_modules;
     VisualModule *visual_modules;

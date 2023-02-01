@@ -91,6 +91,9 @@ createWindow()
 
     ApplicationContext *context;
 
+    int canvas_width;
+    int canvas_height;
+
     screen_dimensions = getScreenDimensions();
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -105,7 +108,7 @@ createWindow()
 
     left_pane = createLeftPane(&button_run, &button_stop, &button_update,
             &text_editing_area_view, &error_reporting_area_view);
-    right_pane = createRightPane();
+    right_pane = createRightPane(&canvas_width, &canvas_height);
 
     gtk_grid_attach(GTK_GRID(grid), left_pane, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), right_pane, 1, 1, 1, 1);
@@ -115,35 +118,30 @@ createWindow()
     context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
 
     context->text_edit_text_view = text_editing_area_view;
-
     context->error_reporting_text_view = error_reporting_area_view;
-
     context->drawing_area = right_pane;
+    context->canvas_width = canvas_width;
+    context->canvas_height = canvas_height;
 
-    context->num_modules = 8;
-
+    context->num_modules = 3;
     int m = 0;
     context->abstract_modules = (AbstractModule*) malloc(
             sizeof(AbstractModule) * context->num_modules);
-    context->abstract_modules[m++] = (AbstractModule){ M_AUDIOFILE };
-    context->abstract_modules[m++] = (AbstractModule){ M_CLOCK };
-    context->abstract_modules[m++] = (AbstractModule){ M_SEQUENCER };
-    context->abstract_modules[m++] = (AbstractModule){ M_SINOSC };
-    context->abstract_modules[m++] = (AbstractModule){ M_LPF };
-    context->abstract_modules[m++] = (AbstractModule){ M_ENVELOPE };
+    context->abstract_modules[m++] = (AbstractModule){ M_SAWOSC };
     context->abstract_modules[m++] = (AbstractModule){ M_MIXER };
+    context->abstract_modules[m++] = (AbstractModule){ M_SPEAKERS };
 
     context->visual_modules = (VisualModule*) malloc(
             sizeof(VisualModule) * context->num_modules);
 
     context->drawing = 0; //don't draw initially
 
-    context->num_connections = 0;
+    context->num_connections = 2;
 
-    //context->connections = (Connection*) malloc(
-    //        sizeof(Connection) * context->num_connections);
-    //context->connections[0] = (Connection){ 0, 0, 1, 0 };
-    //context->connections[1] = (Connection){ 0, 0, 1, 1 };
+    context->connections = (Connection*) malloc(
+            sizeof(Connection) * context->num_connections);
+    context->connections[0] = (Connection){ 0, 0, 1, 0 };
+    context->connections[1] = (Connection){ 1, 0, 2, 0 };
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
@@ -280,16 +278,17 @@ createErrorReportingArea(GtkWidget **text_view)
 }
 
 static GtkWidget*
-createRightPane()
+createRightPane(int *canvas_width, int *canvas_height)
 {
     GtkWidget* drawing_area;
     GdkRectangle screen_dimensions;
 
     screen_dimensions = getScreenDimensions();
+    *canvas_width = screen_dimensions.width / 2;
+    *canvas_height = screen_dimensions.height;
 
     drawing_area = gtk_drawing_area_new();
-    gtk_widget_set_size_request(drawing_area, screen_dimensions.width / 2,
-            screen_dimensions.height);
+    gtk_widget_set_size_request(drawing_area, *canvas_width, *canvas_height);
 
     return drawing_area;
 }

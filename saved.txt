@@ -1,2 +1,2 @@
-OSCILLATOR osc1 : out -> MIXER mixer1 : in1
+SAWOSC osc1 : out -> MIXER mixer1 : in0
 mixer1 : out -> SPEAKERS

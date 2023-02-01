@@ -12,7 +12,8 @@ typedef enum {
     M_LPF,
     M_HPF,
     M_REVERB,
-    M_AUDIOFILE
+    M_AUDIOFILE,
+    M_SPEAKERS
 } ModuleType;
 
 typedef struct
@@ -51,3 +52,6 @@ typedef struct
 void convertAbstractModulesToVisualModules(int num_modules,
         AbstractModule* abstract_modules, VisualModule* visual_modules);
 
+void arrangeModulesOnCanvas(int canvas_width, int canvas_height, 
+        int num_modules, VisualModule *visual_modules, int num_connections,
+        Connection *connections);
