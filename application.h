@@ -9,5 +9,7 @@ typedef struct {
     AbstractModule *abstract_modules;
     VisualModule *visual_modules;
     int drawing;
+    int num_connections;
+    Connection *connections;
 } ApplicationContext;
 

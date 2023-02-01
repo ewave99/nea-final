@@ -113,19 +113,31 @@ createWindow()
     gtk_container_add(GTK_CONTAINER(window), grid);
 
     context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
+
     context->text_edit_text_view = text_editing_area_view;
+
     context->error_reporting_text_view = error_reporting_area_view;
+
     context->drawing_area = right_pane;
 
     context->num_modules = 2;
+
     context->abstract_modules = (AbstractModule*) malloc(
             sizeof(AbstractModule) * context->num_modules);
     context->abstract_modules[0] = (AbstractModule){ M_SINOSC };
     context->abstract_modules[1] = (AbstractModule){ M_MIXER };
+
     context->visual_modules = (VisualModule*) malloc(
             sizeof(VisualModule) * context->num_modules);
 
     context->drawing = 0; //don't draw initially
+
+    context->num_connections = 2;
+
+    context->connections = (Connection*) malloc(
+            sizeof(Connection) * context->num_connections);
+    context->connections[0] = (Connection){ 0, 0, 1, 0 };
+    context->connections[1] = (Connection){ 0, 0, 1, 1 };
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);

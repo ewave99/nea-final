@@ -40,6 +40,14 @@ typedef struct
 }
 VisualModule;
 
+typedef struct
+{
+    int src_module_index;
+    int src_module_output_index;
+    int dst_module_index;
+    int dst_module_input_index;
+} Connection;
+
 void convertAbstractModulesToVisualModules(int num_modules,
         AbstractModule* abstract_modules, VisualModule* visual_modules);
 

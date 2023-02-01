@@ -3,21 +3,7 @@
 #include <cairo/cairo.h>
 #include <application.h>
 
-typedef struct
-{
-    int src_module_index;
-    int src_module_output_index;
-    int dst_module_index;
-    int dst_module_input_index;
-} Connection;
-
 static void doDrawing(cairo_t *canvas, ApplicationContext *context);
-
-//static const int NUM_CONNECTIONS = 2;
-//static const Connection connections[2] = {
-//    { 0, 0, 1, 0 },
-//    { 0, 0, 1, 1 }
-//};
 
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
@@ -128,22 +114,30 @@ drawModule(cairo_t *canvas, VisualModule module, double font_size)
             font_size, module.num_outputs, module.outputs);
 }
 
-/*
 static void
-drawConnection(cairo_t *canvas, Connection connection)
+drawModules(cairo_t *canvas, int num_modules, VisualModule *visual_modules,
+        double font_size)
+{
+    for (int i = 0; i < num_modules; i ++)
+        drawModule(canvas, visual_modules[i], font_size);
+}
+
+static void
+drawConnection(cairo_t *canvas, VisualModule *visual_modules,
+        Connection connection)
 {
     double start_x, start_y;
     double end_x, end_y;
     VisualModule src_module;
     VisualModule dst_module;
 
-    src_module = items[connection.src_module_index];
+    src_module = visual_modules[connection.src_module_index];
     start_x = src_module.rect.x + src_module.rect.w
         / src_module.num_outputs
         * connection.src_module_output_index;
     start_y = src_module.rect.y + src_module.rect.h;
 
-    dst_module = items[connection.dst_module_index];
+    dst_module = visual_modules[connection.dst_module_index];
     end_x = dst_module.rect.x + dst_module.rect.w
         / dst_module.num_inputs
         * connection.dst_module_input_index;
@@ -155,7 +149,14 @@ drawConnection(cairo_t *canvas, Connection connection)
     cairo_line_to(canvas, end_x, end_y);
     cairo_stroke(canvas);
 }
-*/
+
+static void
+drawConnections(cairo_t *canvas, VisualModule *visual_modules,
+        int num_connections, Connection *connections)
+{
+    for (int i = 0; i < num_connections; i ++)
+        drawConnection(canvas, visual_modules, connections[i]);
+}
 
 static void
 doDrawing(cairo_t *canvas, ApplicationContext *context)
@@ -168,17 +169,11 @@ doDrawing(cairo_t *canvas, ApplicationContext *context)
     if (context->drawing == 1) {
         double font_size = 20;
 
-        for (int i = 0; i < context->num_modules; i ++)
-        {
-            drawModule(canvas, context->visual_modules[i], font_size);
-        }
+        drawModules(canvas, context->num_modules, context->visual_modules,
+                font_size);
 
-        /*
-        for (int c_index = 0; c_index < NUM_CONNECTIONS; c_index ++)
-        {
-            drawConnection(canvas, connections[c_index]);
-        }
-        */
+        drawConnections(canvas, context->visual_modules,
+                context->num_connections, context->connections);
 
         context->drawing = 0;
     }
