@@ -59,6 +59,19 @@ getScreenDimensions()
 }
 
 static void
+quitApplication(GtkWidget* window, ApplicationContext* context)
+{
+    if (context->abstract_modules != NULL)
+        free(context->abstract_modules);
+    if (context->visual_modules != NULL)
+        free(context->visual_modules);
+
+    free(context);
+
+    gtk_main_quit();
+}
+
+static void
 createWindow()
 {
     GdkRectangle screen_dimensions;
@@ -99,9 +112,6 @@ createWindow()
 
     gtk_container_add(GTK_CONTAINER(window), grid);
 
-    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
-            NULL);
-
     context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
     context->text_edit_text_view = text_editing_area_view;
     context->error_reporting_text_view = error_reporting_area_view;
@@ -115,6 +125,8 @@ createWindow()
     context->visual_modules = (VisualModule*) malloc(
             sizeof(VisualModule) * context->num_modules);
 
+    context->drawing = 0; //don't draw initially
+
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
     g_signal_connect(button_stop, "clicked",
@@ -124,6 +136,10 @@ createWindow()
 
     g_signal_connect(G_OBJECT(right_pane), "draw", G_CALLBACK(onDrawEvent),
             context);
+
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(quitApplication),
+            context);
+
     //this is what actually makes it draw. We don't want it to draw anything
     //right at the beginning.
     //gtk_widget_queue_draw(drawing_area);

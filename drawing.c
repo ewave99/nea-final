@@ -19,8 +19,6 @@ static void doDrawing(cairo_t *canvas, ApplicationContext *context);
 //    { 0, 0, 1, 1 }
 //};
 
-static int DRAWING = 0;
-
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
 {
@@ -167,7 +165,7 @@ doDrawing(cairo_t *canvas, ApplicationContext *context)
     if (context->visual_modules == NULL)
         return;
 
-    if (DRAWING) {
+    if (context->drawing == 1) {
         double font_size = 20;
 
         for (int i = 0; i < context->num_modules; i ++)
@@ -182,11 +180,9 @@ doDrawing(cairo_t *canvas, ApplicationContext *context)
         }
         */
 
-        DRAWING = 0;
+        context->drawing = 0;
     }
     else
-    {
-        DRAWING = 1;
-    }
+        context->drawing = 1;
 }
 

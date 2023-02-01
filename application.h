@@ -8,5 +8,6 @@ typedef struct {
     int num_modules;
     AbstractModule *abstract_modules;
     VisualModule *visual_modules;
+    int drawing;
 } ApplicationContext;
 
