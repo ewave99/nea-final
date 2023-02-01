@@ -1,6 +1,37 @@
 #include <string.h>
 #include "visuals.h"
 
+static void
+setModuleName(VisualModule *module, const char *name)
+{
+    strcpy(module->module_name, name);
+}
+
+static void
+setModuleFillColour256(VisualModule *module, double r, double g, double b)
+{
+    module->fill_colour[0] = r / 256;
+    module->fill_colour[1] = g / 256;
+    module->fill_colour[2] = b / 256;
+}
+
+static void
+setModuleLineColour256(VisualModule *module, double r, double g, double b)
+{
+    module->line_colour[0] = r / 256;
+    module->line_colour[1] = g / 256;
+    module->line_colour[2] = b / 256;
+}
+
+static void
+setModuleRect(VisualModule *module, int x, int y, int w, int h)
+{
+    module->rect.x = x;
+    module->rect.y = y;
+    module->rect.w = w;
+    module->rect.h = h;
+}
+
 static VisualModule
 convertAbstractModuleToVisualModule(AbstractModule abstract_module)
 {
@@ -9,27 +40,11 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
     switch (abstract_module.module_type)
     {
         case M_SINOSC:
-            strcpy(visual_module.module_name, "SINE OSCILLATOR");
-
-            //fill colour: #fff2cc = (255, 242, 204)
-            visual_module.fill_colour[0] = 255.0 / 256;
-            visual_module.fill_colour[1] = 242.0 / 256;
-            visual_module.fill_colour[2] = 204.0 / 256;
-
-            //line colour: #d6b656 = (214, 182, 86)
-            visual_module.line_colour[0] = 214.0 / 256;
-            visual_module.line_colour[1] = 182.0 / 256;
-            visual_module.line_colour[2] = 86.0 / 256;
-
-            visual_module.rect = (Rect){
-                .x = 300,
-                .y = 0,
-                .w = 300,
-                .h = 100
-            };
-
+            setModuleName(&visual_module, "SINE OSCILLATOR");
+            setModuleFillColour256(&visual_module, 255., 242., 204.);
+            setModuleLineColour256(&visual_module, 214., 182., 86.);
+            setModuleRect(&visual_module, 300, 0, 300, 100);
             visual_module.num_inputs = 0;
-
             visual_module.num_outputs = 1;
             strcpy(visual_module.outputs[0], "out");
             break;
@@ -41,24 +56,10 @@ convertAbstractModuleToVisualModule(AbstractModule abstract_module)
         //case M_SEQUENCER:
         //case M_ENVELOPE:
         case M_MIXER:
-            strcpy(visual_module.module_name, "MIXER");
-
-            //fill colour: #e1d5e7 = (225.0, 213.0, 231.0)
-            visual_module.fill_colour[0] = 225.0 / 256;
-            visual_module.fill_colour[1] = 213.0 / 256;
-            visual_module.fill_colour[2] = 231.0 / 256;
-
-            //line colour: #9673a6 = (150, 115, 166)
-            visual_module.line_colour[0] = 150.0 / 256;
-            visual_module.line_colour[1] = 115.0 / 256;
-            visual_module.line_colour[2] = 166.0 / 256;
-
-            visual_module.rect = (Rect){
-                .x = 300,
-                .y = 600,
-                .w = 300,
-                .h = 100
-            };
+            setModuleName(&visual_module, "MIXER");
+            setModuleFillColour256(&visual_module, 225., 213., 231.);
+            setModuleLineColour256(&visual_module, 150., 115., 166.);
+            setModuleRect(&visual_module, 300, 600, 300, 100);
 
             visual_module.num_inputs = 4;
             strcpy(visual_module.inputs[0], "in0");

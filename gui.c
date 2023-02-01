@@ -120,24 +120,30 @@ createWindow()
 
     context->drawing_area = right_pane;
 
-    context->num_modules = 2;
+    context->num_modules = 8;
 
+    int m = 0;
     context->abstract_modules = (AbstractModule*) malloc(
             sizeof(AbstractModule) * context->num_modules);
-    context->abstract_modules[0] = (AbstractModule){ M_SINOSC };
-    context->abstract_modules[1] = (AbstractModule){ M_MIXER };
+    context->abstract_modules[m++] = (AbstractModule){ M_AUDIOFILE };
+    context->abstract_modules[m++] = (AbstractModule){ M_CLOCK };
+    context->abstract_modules[m++] = (AbstractModule){ M_SEQUENCER };
+    context->abstract_modules[m++] = (AbstractModule){ M_SINOSC };
+    context->abstract_modules[m++] = (AbstractModule){ M_LPF };
+    context->abstract_modules[m++] = (AbstractModule){ M_ENVELOPE };
+    context->abstract_modules[m++] = (AbstractModule){ M_MIXER };
 
     context->visual_modules = (VisualModule*) malloc(
             sizeof(VisualModule) * context->num_modules);
 
     context->drawing = 0; //don't draw initially
 
-    context->num_connections = 2;
+    context->num_connections = 0;
 
-    context->connections = (Connection*) malloc(
-            sizeof(Connection) * context->num_connections);
-    context->connections[0] = (Connection){ 0, 0, 1, 0 };
-    context->connections[1] = (Connection){ 0, 0, 1, 1 };
+    //context->connections = (Connection*) malloc(
+    //        sizeof(Connection) * context->num_connections);
+    //context->connections[0] = (Connection){ 0, 0, 1, 0 };
+    //context->connections[1] = (Connection){ 0, 0, 1, 1 };
 
     g_signal_connect(button_run, "clicked",
             G_CALLBACK(doRunButtonCallback), context);
