@@ -8,8 +8,6 @@ static void doDrawing(cairo_t *canvas, ApplicationContext *context);
 gboolean
 onDrawEvent(GtkWidget *widget, cairo_t *canvas, ApplicationContext* context)
 {
-    convertAbstractModulesToVisualModules(context->num_modules,
-            context->abstract_modules, context->visual_modules);
     arrangeModulesOnCanvas(context->canvas_width, context->canvas_height,
             context->num_modules, context->visual_modules,
             context->num_connections, context->connections);
@@ -169,18 +167,14 @@ doDrawing(cairo_t *canvas, ApplicationContext *context)
     if (context->visual_modules == NULL)
         return;
 
-    if (context->drawing == 1) {
-        double font_size = 20;
+    double font_size = 20;
 
-        drawModules(canvas, context->num_modules, context->visual_modules,
-                font_size);
+    drawModules(canvas, context->num_modules, context->visual_modules,
+            font_size);
 
-        drawConnections(canvas, context->visual_modules,
-                context->num_connections, context->connections);
+    drawConnections(canvas, context->visual_modules,
+            context->num_connections, context->connections);
 
-        context->drawing = 0;
-    }
-    else
-        context->drawing = 1;
+    context->drawing = 0;
 }
 

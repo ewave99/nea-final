@@ -1,15 +1,13 @@
-typedef struct 
-{
-    int source;
-    int destination;
-} AdjacencyListEntry;
+#include "application.h"
 
 typedef struct
 {
-    AdjacencyListEntry* adjacency_list;
-
+    int num_modules;
+    AbstractModule* modules;
+    int num_connections;
+    Connection* connections;
     int error_code;
-    char* error_message;
+    char error_message[256];
 } ParseResult;
 
 ParseResult processText(const char*);

@@ -2,29 +2,14 @@
 #include <cairo/cairo.h>
 #include "drawing.h"
 #include "text.h"
-#include "application.h"
-
-/*
-    GUI HIERARCHY:
-    ==============
-    window |-> grid |-> grid |-> scrolled window -> text view
-                    |        |-> horizontal box -> buttons
-                    |        |-> scrolled window -> text view (non-editable)
-                    |-> drawing area
-
-    IN OTHER WORDS:
-    ===============
-    window |-> left pane |-> text editing area
-           |             |-> area for control buttons
-           |             |-> area for error reporting (non-editable)
-           |-> right pane (drawing area)
-*/
+//#include "application.h"
 
 void activate(GtkApplication *app, gpointer user_data);
 static void createWindow();
 static GdkRectangle getScreenDimensions();
 static GtkWidget* createLeftPane(GtkWidget **button_run_ptr,
         GtkWidget **button_stop_ptr, GtkWidget **button_update_ptr,
+        GtkWidget **button_save_ptr, GtkWidget **button_load_ptr,
         GtkWidget **text_editing_area_view_ptr,
         GtkWidget **error_reporting_area_view_ptr);
 static GtkWidget* createTextEditingArea(GtkWidget **text_view);
@@ -44,7 +29,6 @@ void
 activate(GtkApplication *app, gpointer user_data)
 {
     createWindow();
-
     gtk_main();
 }
 
@@ -85,6 +69,8 @@ createWindow()
     GtkWidget *button_run;
     GtkWidget *button_stop;
     GtkWidget *button_update;
+    GtkWidget *button_save;
+    GtkWidget *button_load;
 
     GtkWidget *text_editing_area_view;
     GtkWidget *error_reporting_area_view;
@@ -107,7 +93,8 @@ createWindow()
     grid = gtk_grid_new();
 
     left_pane = createLeftPane(&button_run, &button_stop, &button_update,
-            &text_editing_area_view, &error_reporting_area_view);
+            &button_save, &button_load, &text_editing_area_view,
+            &error_reporting_area_view);
     right_pane = createRightPane(&canvas_width, &canvas_height);
 
     gtk_grid_attach(GTK_GRID(grid), left_pane, 0, 1, 1, 1);
@@ -122,14 +109,6 @@ createWindow()
     context->drawing_area = right_pane;
     context->canvas_width = canvas_width;
     context->canvas_height = canvas_height;
-
-    context->num_modules = 3;
-    int m = 0;
-    context->abstract_modules = (AbstractModule*) malloc(
-            sizeof(AbstractModule) * context->num_modules);
-    context->abstract_modules[m++] = (AbstractModule){ M_SAWOSC };
-    context->abstract_modules[m++] = (AbstractModule){ M_MIXER };
-    context->abstract_modules[m++] = (AbstractModule){ M_SPEAKERS };
 
     context->visual_modules = (VisualModule*) malloc(
             sizeof(VisualModule) * context->num_modules);
@@ -149,6 +128,10 @@ createWindow()
             G_CALLBACK(doStopButtonCallback), context);
     g_signal_connect(button_update, "clicked",
             G_CALLBACK(doUpdateButtonCallback), context);
+    g_signal_connect(button_save, "clicked",
+            G_CALLBACK(doSaveButtonCallback), context);
+    g_signal_connect(button_load, "clicked",
+            G_CALLBACK(doLoadButtonCallback), context);
 
     g_signal_connect(G_OBJECT(right_pane), "draw", G_CALLBACK(onDrawEvent),
             context);
@@ -165,8 +148,9 @@ createWindow()
 
 static GtkWidget*
 createLeftPane(GtkWidget **button_run_ptr, GtkWidget** button_stop_ptr,
-        GtkWidget **button_update_ptr, GtkWidget **text_editing_area_view_ptr,
-        GtkWidget **error_reporting_area_view_ptr)
+        GtkWidget **button_update_ptr, GtkWidget **button_save_ptr, GtkWidget
+        **button_load_ptr, GtkWidget **text_editing_area_view_ptr, GtkWidget
+        **error_reporting_area_view_ptr)
 {
     GtkWidget* grid;
 
@@ -174,30 +158,17 @@ createLeftPane(GtkWidget **button_run_ptr, GtkWidget** button_stop_ptr,
     GtkWidget* control_button_area;
     GtkWidget* error_reporting_area;
 
-    GtkWidget* button_save;
-    GtkWidget* button_load;
-
-    ApplicationContext* context;
-
     grid = gtk_grid_new();
     text_editing_area = createTextEditingArea(text_editing_area_view_ptr);
     control_button_area = createControlButtonArea(button_run_ptr,
-            button_stop_ptr, button_update_ptr, &button_save, &button_load);
+            button_stop_ptr, button_update_ptr, button_save_ptr,
+            button_load_ptr);
     error_reporting_area = createErrorReportingArea(
             error_reporting_area_view_ptr);
 
     gtk_grid_attach(GTK_GRID(grid), text_editing_area, 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), control_button_area, 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), error_reporting_area, 0, 3, 1, 1);
-
-    context = (ApplicationContext*) malloc(sizeof(ApplicationContext));
-    context->text_edit_text_view = *text_editing_area_view_ptr;
-    context->error_reporting_text_view = *error_reporting_area_view_ptr;
-
-    g_signal_connect(button_save, "clicked",
-            G_CALLBACK(doSaveButtonCallback), context);
-    g_signal_connect(button_load, "clicked",
-            G_CALLBACK(doLoadButtonCallback), context);
 
     return grid;
 }
@@ -296,19 +267,16 @@ createRightPane(int *canvas_width, int *canvas_height)
 static void
 doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
-    /*
     GtkTextBuffer* text_edit_text_buffer;
     GtkTextIter text_edit_buffer_start;
     GtkTextIter text_edit_buffer_end;
     gchar* text_edit_text_buffer_text;
-    */
 
     GtkTextBuffer* error_reporting_text_buffer;
 
     error_reporting_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->error_reporting_text_view));
 
-    /*
     text_edit_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->text_edit_text_view));
 
@@ -320,22 +288,32 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
             &text_edit_buffer_end, FALSE);
 
     ParseResult result = processText(text_edit_text_buffer_text);
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            result.error_message, -1);
+    g_free(text_edit_text_buffer_text);
 
     if (result.error_code != 0)
-    {
-        gtk_text_buffer_set_text(error_reporting_text_buffer,
-                result.error_message, -1);
-        g_free(text_edit_text_buffer_text);
         return;
-    }
+    if (result.num_modules == 0)
+        return;
 
-    g_free(text_edit_text_buffer_text);
-    */
+    context->num_modules = result.num_modules;
+
+    context->abstract_modules = (AbstractModule*) realloc(
+            context->abstract_modules, 0);
+    context->abstract_modules = result.modules;
+
+    context->num_connections = result.num_connections;
+    context->connections = (Connection*) realloc(context->connections, 0);
+    context->connections = result.connections;
+
+    context->visual_modules = (VisualModule*) realloc(context->visual_modules,
+            sizeof(VisualModule) * context->num_modules);
+
+    convertAbstractModulesToVisualModules(context->num_modules,
+            context->abstract_modules, context->visual_modules);
 
     gtk_widget_queue_draw(context->drawing_area);
-
-    gtk_text_buffer_set_text(error_reporting_text_buffer,
-            "Run successfully.", -1);
 }
 
 static void
@@ -353,19 +331,16 @@ doStopButtonCallback(GtkWidget *widget, ApplicationContext* context)
 static void
 doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context)
 {
-    /*
     GtkTextBuffer* text_edit_text_buffer;
     GtkTextIter text_edit_buffer_start;
     GtkTextIter text_edit_buffer_end;
     gchar* text_edit_text_buffer_text;
-    */
 
     GtkTextBuffer* error_reporting_text_buffer;
 
     error_reporting_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->error_reporting_text_view));
 
-    /*
     text_edit_text_buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(context->text_edit_text_view));
 
@@ -377,22 +352,32 @@ doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context)
             &text_edit_buffer_end, FALSE);
 
     ParseResult result = processText(text_edit_text_buffer_text);
+    gtk_text_buffer_set_text(error_reporting_text_buffer,
+            result.error_message, -1);
+    g_free(text_edit_text_buffer_text);
 
     if (result.error_code != 0)
-    {
-        gtk_text_buffer_set_text(error_reporting_text_buffer,
-                result.error_message, -1);
-        g_free(text_edit_text_buffer_text);
         return;
-    }
+    if (result.num_modules == 0)
+        return;
 
-    g_free(text_edit_text_buffer_text);
-    */
+    context->num_modules = result.num_modules;
+
+    context->abstract_modules = (AbstractModule*) realloc(
+            context->abstract_modules, 0);
+    context->abstract_modules = result.modules;
+
+    context->num_connections = result.num_connections;
+    context->connections = (Connection*) realloc(context->connections, 0);
+    context->connections = result.connections;
+
+    context->visual_modules = (VisualModule*) realloc(context->visual_modules,
+            sizeof(VisualModule) * context->num_modules);
+
+    convertAbstractModulesToVisualModules(context->num_modules,
+            context->abstract_modules, context->visual_modules);
 
     gtk_widget_queue_draw(context->drawing_area);
-
-    gtk_text_buffer_set_text(error_reporting_text_buffer,
-            "Updated successfully.", -1);
 }
 
 static void
@@ -480,7 +465,7 @@ doLoadButtonCallback(GtkWidget *widget, ApplicationContext* context)
         return;
     }
 
-    // actually load the contents of the tile into memory
+    // actually load the contents of the file into memory
 
     fseek(file_ptr, 0L, SEEK_END);
     num_bytes = ftell(file_ptr);
