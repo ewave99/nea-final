@@ -10,4 +10,4 @@ typedef struct
     char error_message[256];
 } ParseResult;
 
-ParseResult processText(const char*);
+ParseResult processText(char*);
