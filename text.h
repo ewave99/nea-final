@@ -6,8 +6,18 @@ typedef struct
     AbstractModule* modules;
     int num_connections;
     Connection* connections;
-    int error_code;
-    char error_message[256];
-} ParseResult;
+    int err;
+}
+ParseResult;
 
-ParseResult processText(char*);
+typedef struct
+{
+    int line;
+    int col;
+    int err;
+    char errmsg[256];
+    ParseResult result;
+}
+ParseContext;
+
+ParseContext processText(char*);

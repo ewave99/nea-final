@@ -1,2 +1,0 @@
-SAWOSC osc1 : out -> MIXER mixer1 : in0
-MIXER mixer1 : out -> SPEAKERS : in

@@ -287,25 +287,25 @@ doRunButtonCallback(GtkWidget *widget, ApplicationContext* context)
             text_edit_text_buffer, &text_edit_buffer_start,
             &text_edit_buffer_end, FALSE);
 
-    ParseResult result = processText(text_edit_text_buffer_text);
+    ParseContext parsed = processText(text_edit_text_buffer_text);
     gtk_text_buffer_set_text(error_reporting_text_buffer,
-            result.error_message, -1);
+            parsed.errmsg, -1);
     g_free(text_edit_text_buffer_text);
 
-    if (result.error_code != 0)
+    if (parsed.err != 0)
         return;
-    if (result.num_modules == 0)
+    if (parsed.result.num_modules == 0)
         return;
 
-    context->num_modules = result.num_modules;
+    context->num_modules = parsed.result.num_modules;
 
     context->abstract_modules = (AbstractModule*) realloc(
             context->abstract_modules, 0);
-    context->abstract_modules = result.modules;
+    context->abstract_modules = parsed.result.modules;
 
-    context->num_connections = result.num_connections;
+    context->num_connections = parsed.result.num_connections;
     context->connections = (Connection*) realloc(context->connections, 0);
-    context->connections = result.connections;
+    context->connections = parsed.result.connections;
 
     context->visual_modules = (VisualModule*) realloc(context->visual_modules,
             sizeof(VisualModule) * context->num_modules);
@@ -351,25 +351,25 @@ doUpdateButtonCallback(GtkWidget *widget, ApplicationContext* context)
             text_edit_text_buffer, &text_edit_buffer_start,
             &text_edit_buffer_end, FALSE);
 
-    ParseResult result = processText(text_edit_text_buffer_text);
+    ParseContext parsed = processText(text_edit_text_buffer_text);
     gtk_text_buffer_set_text(error_reporting_text_buffer,
-            result.error_message, -1);
+            parsed.errmsg, -1);
     g_free(text_edit_text_buffer_text);
 
-    if (result.error_code != 0)
+    if (parsed.err != 0)
         return;
-    if (result.num_modules == 0)
+    if (parsed.result.num_modules == 0)
         return;
 
-    context->num_modules = result.num_modules;
+    context->num_modules = parsed.result.num_modules;
 
     context->abstract_modules = (AbstractModule*) realloc(
             context->abstract_modules, 0);
-    context->abstract_modules = result.modules;
+    context->abstract_modules = parsed.result.modules;
 
-    context->num_connections = result.num_connections;
+    context->num_connections = parsed.result.num_connections;
     context->connections = (Connection*) realloc(context->connections, 0);
-    context->connections = result.connections;
+    context->connections = parsed.result.connections;
 
     context->visual_modules = (VisualModule*) realloc(context->visual_modules,
             sizeof(VisualModule) * context->num_modules);
