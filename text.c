@@ -107,58 +107,26 @@ getModuleType(char *s)
 {
     switch (*s)
     {
-        case 'A':
-            return strcmp(s+1, "UDIOFILE") ? M_UNKNOWN : M_AUDIOFILE;
-            break;
-        case 'C':
-            return strcmp(s+1, "LOCK") ? M_UNKNOWN : M_CLOCK;
-            break;
-        case 'E':
-            return strcmp(s+1, "NVELOPE") ? M_UNKNOWN : M_ENVELOPE;
-            break;
-        case 'M':
-            return strcmp(s+1, "IXER") ? M_UNKNOWN : M_MIXER;
-            break;
-        case 'H':
-            return strcmp(s+1, "PF") ? M_UNKNOWN : M_HPF;
-            break;
-        case 'L':
-            return strcmp(s+1, "PF") ? M_UNKNOWN : M_LPF;
-            break;
-        case 'R':
-            return strcmp(s+1, "EVERB") ? M_UNKNOWN : M_REVERB;
-            break;
+        case 'A': return strcmp(s+1, "UDIOFILE") ? M_UNKNOWN : M_AUDIOFILE;
+        case 'C': return strcmp(s+1, "LOCK")     ? M_UNKNOWN : M_CLOCK;
+        case 'E': return strcmp(s+1, "NVELOPE")  ? M_UNKNOWN : M_ENVELOPE;
+        case 'M': return strcmp(s+1, "IXER")     ? M_UNKNOWN : M_MIXER;
+        case 'H': return strcmp(s+1, "PF")       ? M_UNKNOWN : M_HPF;
+        case 'L': return strcmp(s+1, "PF")       ? M_UNKNOWN : M_LPF;
+        case 'R': return strcmp(s+1, "EVERB")    ? M_UNKNOWN : M_REVERB;
         case 'S':
             switch (*(s+1))
             {
-                case 'A':
-                    return strcmp(s+2, "WOSC") ? M_UNKNOWN : M_SAWOSC;
-                    break;
-                case 'E':
-                    return strcmp(s+2, "QUENCER") ? M_UNKNOWN : M_SEQUENCER;
-                    break;
-                case 'I':
-                    return strcmp(s+2, "NOSC") ? M_UNKNOWN : M_SINOSC;
-                    break;
-                case 'P':
-                    return strcmp(s+2, "EAKERS") ? M_UNKNOWN : M_SPEAKERS;
-                    break;
-                case 'Q':
-                    return strcmp(s+2, "UOSC") ? M_UNKNOWN : M_SQUOSC;
-                    break;
-                default:
-                    return M_UNKNOWN;
-                    break;
+                case 'A': return strcmp(s+2, "WOSC")    ? M_UNKNOWN : M_SAWOSC;
+                case 'E': return strcmp(s+2, "QUENCER") ? M_UNKNOWN : M_SEQUENCER;
+                case 'I': return strcmp(s+2, "NOSC")    ? M_UNKNOWN : M_SINOSC;
+                case 'P': return strcmp(s+2, "EAKERS")  ? M_UNKNOWN : M_SPEAKERS;
+                case 'Q': return strcmp(s+2, "UOSC")    ? M_UNKNOWN : M_SQUOSC;
+                default: return M_UNKNOWN;
             }
-            break;
-        case 'T':
-            return strcmp(s+1, "RIOSC") ? M_UNKNOWN : M_TRIOSC;
-            break;
-        default:
-            return M_UNKNOWN;
-            break;
+        case 'T': return strcmp(s+1, "RIOSC") ? M_UNKNOWN : M_TRIOSC;
+        default: return M_UNKNOWN;
     }
-    return M_UNKNOWN;
 }
 
 static int
