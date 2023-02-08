@@ -131,14 +131,16 @@ drawConnection(cairo_t *canvas, VisualModule *visual_modules,
     double end_x, end_y;
     VisualModule src_module;
     VisualModule dst_module;
-
+    
     src_module = visual_modules[connection.src_module_index];
+    if (src_module.num_outputs == 0) return;
     start_x = src_module.rect.x + src_module.rect.w
         / src_module.num_outputs
         * connection.src_module_output_index;
     start_y = src_module.rect.y + src_module.rect.h;
 
     dst_module = visual_modules[connection.dst_module_index];
+    if (dst_module.num_inputs == 0) return;
     end_x = dst_module.rect.x + dst_module.rect.w
         / dst_module.num_inputs
         * connection.dst_module_input_index;

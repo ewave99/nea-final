@@ -1,19 +1,20 @@
 #include <string.h>
 
 typedef enum {
-    M_SINOSC,
-    M_SQUOSC,
-    M_TRIOSC,
-    M_SAWOSC,
+    M_AUDIOFILE,
     M_CLOCK,
-    M_SEQUENCER,
     M_ENVELOPE,
     M_MIXER,
-    M_LPF,
     M_HPF,
+    M_LPF,
     M_REVERB,
-    M_AUDIOFILE,
-    M_SPEAKERS
+    M_SAWOSC,
+    M_SEQUENCER,
+    M_SINOSC,
+    M_SPEAKERS,
+    M_SQUOSC,
+    M_TRIOSC,
+    M_UNKNOWN
 } ModuleType;
 
 typedef struct

@@ -1,0 +1,1 @@
+SINOSC sinosc : out -> MIXER mixer1 : in0

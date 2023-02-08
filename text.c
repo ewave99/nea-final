@@ -4,6 +4,8 @@
 #include "text.h"
 
 #define BUFFER_SIZE 256
+#define MAX_NUM_MODULES 16
+#define MAX_NUM_CONNECTIONS 32
 
 typedef enum
 {
@@ -25,56 +27,41 @@ processWhiteSpace(char *s, int *iptr)
 }
 
 static int
-processModuleType(char *s, int *iptr, char *b, int *biptr)
+processModuleType(char *s, int *iptr, char *b)
 {
+    int bi = 0;
     if (!isupper(s[*iptr])) return 1;
 
-    b[(*biptr)++] = s[(*iptr)++];
+    b[bi++] = s[(*iptr)++];
     while(1)
     {
         if (!isalpha(s[*iptr]))
             if (!isdigit(s[*iptr]))
                 if (s[*iptr] != '_') break;
 
-        b[(*biptr)++] = s[(*iptr)++];
+        b[bi++] = s[(*iptr)++];
     }
-    b[*biptr] = '\0';
+    b[bi] = '\0';
 
     return 0;
 }
 
 static int
-processModuleName(char *s, int *iptr, char *b, int *biptr)
+processModuleName(char *s, int *iptr, char *b)
 {
+    int bi = 0;
+
     if (!islower(s[*iptr])) return 1;
-    b[(*biptr)++] = s[(*iptr)++];
+    b[bi++] = s[(*iptr)++];
     while (1)
     {
         if (!isalpha(s[*iptr]))
             if (!isdigit(s[*iptr]))
                 if (s[*iptr] != '_') break;
 
-        b[(*biptr)++] = s[(*iptr)++];
+        b[bi++] = s[(*iptr)++];
     }
-    b[*biptr] = '\0';
-
-    return 0;
-}
-
-static int
-processModuleOutput(char *s, int *iptr, char *b, int *biptr)
-{
-    if (!islower(s[*iptr])) return 1;
-    b[(*biptr)++] = s[(*iptr)++];
-    while (1)
-    {
-        if (!isalpha(s[*iptr]))
-            if (!isdigit(s[*iptr]))
-                if (s[*iptr] != '_') break;
-
-        b[(*biptr)++] = s[(*iptr)++];
-    }
-    b[*biptr] = '\0';
+    b[bi] = '\0';
 
     return 0;
 }
@@ -88,19 +75,20 @@ processArrowOperator(char *s, int *iptr)
 }
 
 static int
-processModuleInput(char *s, int *iptr, char *b, int *biptr)
+processModuleConnector(char *s, int *iptr, char *b)
 {
+    int bi = 0;
     if (!islower(s[*iptr])) return 1;
-    b[(*biptr)++] = s[(*iptr)++];
+    b[bi++] = s[(*iptr)++];
     while (1)
     {
         if (!isalpha(s[*iptr]))
             if (!isdigit(s[*iptr]))
                 if (s[*iptr] != '_') break;
 
-        b[(*biptr)++] = s[(*iptr)++];
+        b[bi++] = s[(*iptr)++];
     }
-    b[*biptr] = '\0';
+    b[bi] = '\0';
 
     return 0;
 }
@@ -114,63 +102,139 @@ raiseError(ParseContext *context, int line, int col, char *errmsg)
     return 1;
 }
 
+static ModuleType
+getModuleType(char *s)
+{
+    switch (*s)
+    {
+        case 'A':
+            return strcmp(s+1, "UDIOFILE") ? M_UNKNOWN : M_AUDIOFILE;
+            break;
+        case 'C':
+            return strcmp(s+1, "LOCK") ? M_UNKNOWN : M_CLOCK;
+            break;
+        case 'E':
+            return strcmp(s+1, "NVELOPE") ? M_UNKNOWN : M_ENVELOPE;
+            break;
+        case 'M':
+            return strcmp(s+1, "IXER") ? M_UNKNOWN : M_MIXER;
+            break;
+        case 'H':
+            return strcmp(s+1, "PF") ? M_UNKNOWN : M_HPF;
+            break;
+        case 'L':
+            return strcmp(s+1, "PF") ? M_UNKNOWN : M_LPF;
+            break;
+        case 'R':
+            return strcmp(s+1, "EVERB") ? M_UNKNOWN : M_REVERB;
+            break;
+        case 'S':
+            switch (*(s+1))
+            {
+                case 'A':
+                    return strcmp(s+2, "WOSC") ? M_UNKNOWN : M_SAWOSC;
+                    break;
+                case 'E':
+                    return strcmp(s+2, "QUENCER") ? M_UNKNOWN : M_SEQUENCER;
+                    break;
+                case 'I':
+                    return strcmp(s+2, "NOSC") ? M_UNKNOWN : M_SINOSC;
+                    break;
+                case 'P':
+                    return strcmp(s+2, "EAKERS") ? M_UNKNOWN : M_SPEAKERS;
+                    break;
+                case 'Q':
+                    return strcmp(s+2, "UOSC") ? M_UNKNOWN : M_SQUOSC;
+                    break;
+                default:
+                    return M_UNKNOWN;
+                    break;
+            }
+            break;
+        case 'T':
+            return strcmp(s+1, "RIOSC") ? M_UNKNOWN : M_TRIOSC;
+            break;
+        default:
+            return M_UNKNOWN;
+            break;
+    }
+    return M_UNKNOWN;
+}
+
 static int
-processConnectionPoint(ParseContext *context, int line,
+processConnectionPoint(ParseContext *context, int line, int line_start,
         ConnectionType connection_type, char *s, int *iptr)
 {
-    int start = *iptr;
-    char buffer[256];
-    int bi = 0;
+    char buffer[BUFFER_SIZE];
+    ModuleType module_type;
+    char module_name[BUFFER_SIZE];
+    char module_connector[BUFFER_SIZE];
+
+    module_type = M_UNKNOWN;
 
     if (isupper(s[*iptr]))
     {
-        if (processModuleType(s, iptr, buffer, &bi) == 1)
-            return raiseError(context, line, *iptr - start, "Invalid module type.");
+        if (processModuleType(s, iptr, buffer) == 1)
+            return raiseError(context, line, *iptr - line_start,
+                    "Invalid module type.");
+        module_type = getModuleType(buffer);
+        if (module_type == M_UNKNOWN)
+            return raiseError(context, line, *iptr - line_start,
+                    "Unknown module type.");
+
         processWhiteSpace(s, iptr);
         if (islower(s[*iptr]))
         {
-            if (processModuleName(s, iptr, buffer, &bi) == 1)
-                return raiseError(context, line, *iptr - start, "Invalid module name.");
+            if (processModuleName(s, iptr, buffer) == 1)
+                return raiseError(context, line, *iptr - line_start,
+                        "Invalid module name.");
         }
         else
-            return raiseError(context, line, *iptr - start, "Missing module name.");
+            return raiseError(context, line, *iptr - line_start,
+                    "Missing module name.");
     }
     else if (islower(s[*iptr]))
     {
-        if (processModuleName(s, iptr, buffer, &bi) == 1)
-            return raiseError(context, line, *iptr - start, "Invalid module name.");
+        if (processModuleName(s, iptr, buffer) == 1)
+            return raiseError(context, line, *iptr - line_start,
+                    "Invalid module name.");
     }
     else
-        return raiseError(context, line, *iptr - start, "Missing module name or module type.");
+        return raiseError(context, line, *iptr - line_start,
+                "Missing module name or module type.");
+    strncpy(module_name, buffer, BUFFER_SIZE);
 
     processWhiteSpace(s, iptr);
     if (s[*iptr] == ':')
         (*iptr)++;
     else
-        return raiseError(context, line, *iptr - start, "Missing colon.");
+        return raiseError(context, line, *iptr - line_start, "Missing colon.");
 
     processWhiteSpace(s, iptr);
-    if (connection_type == C_INPUT)
+    if (islower(s[*iptr]))
     {
-        if (islower(s[*iptr]))
-        {
-            if (processModuleInput(s, iptr, buffer, &bi) == 1)
-                return raiseError(context, line, *iptr - start, "Invalid module input name.");
-        }
-        else
-            return raiseError(context, line, *iptr - start, "Missing module input name.");
+        if (processModuleConnector(s, iptr, buffer) == 1)
+            return raiseError(context, line, *iptr - line_start,
+                    connection_type == C_INPUT ? "Invalid module input name."
+                    : "Invalid module output name.");
     }
     else
-    {
-        if (islower(s[*iptr]))
-        {
-            if (processModuleOutput(s, iptr, buffer, &bi) == 1)
-                return raiseError(context, line, *iptr - start, "Invalid module output name.");
-        }
-        else
-            return raiseError(context, line, *iptr - start, "Missing module output name.");
-    }
+        return raiseError(context, line, *iptr - line_start,
+                connection_type == C_INPUT ? "Missing module input name."
+                : "Missing module output name");
+    strncpy(module_connector, buffer, BUFFER_SIZE);
 
+    //update the context with the new module
+    if (context->result.num_modules < MAX_NUM_MODULES)
+    {
+        context->result.modules[context->result.num_modules].module_type
+            = module_type;
+        context->result.num_modules++;
+    }
+    else
+        return raiseError(context, line, *iptr - line_start,
+                "Maximum number of modules reached.");
+    
     return 0;
 }
 
@@ -180,13 +244,27 @@ processLine(ParseContext *context, int line, char* s, int *iptr)
     int start = *iptr;
 
     processWhiteSpace(s, iptr);
-    if (processConnectionPoint(context, line, C_INPUT, s, iptr)) return 1;
+    if (processConnectionPoint(context, line, start, C_INPUT, s, iptr)) return 1;
     processWhiteSpace(s, iptr);
     if (processArrowOperator(s, iptr) == 1)
         return raiseError(context, line, *iptr - start, "Error processing arrow operator.");
     processWhiteSpace(s, iptr);
-    if (processConnectionPoint(context, line, C_OUTPUT, s, iptr)) return 1;
+    if (processConnectionPoint(context, line, start, C_OUTPUT, s, iptr)) return 1;
     processWhiteSpace(s, iptr);
+
+    if (context->result.num_connections < MAX_NUM_CONNECTIONS)
+    {
+        context->result.connections[context->result.num_connections] = (Connection){
+            .src_module_index = context->result.num_modules - 2,
+            .src_module_output_index = 0,
+            .dst_module_index = context->result.num_modules - 1,
+            .dst_module_input_index = 0
+        };
+        context->result.num_connections ++;
+    }
+    else
+        return raiseError(context, line, *iptr - start,
+                "Maximum number of connections reached.");
 
     return 0;
 }
@@ -200,33 +278,25 @@ processText(char* s)
 
     context.err = 0;
     context.col = 0;
+
+    //prepare result
+    context.result.modules = (AbstractModule*) malloc(sizeof(AbstractModule)
+            * MAX_NUM_MODULES);
+    context.result.num_modules = 0;
+    context.result.connections = (Connection*) malloc(sizeof(Connection)
+            * MAX_NUM_CONNECTIONS);
+    context.result.num_connections = 0;
     
-    if (processLine(&context, line, s, &i))
-        return context;
-
-    if (s[i] == '\0' || s[i] == '\n')
+    while (context.err == 0 && s[i] != '\0')
     {
-        //test to see if program handles result from this function correctly
-        context.result.num_modules = 3;
-        context.result.modules = (AbstractModule*) malloc(sizeof(AbstractModule)
-                * context.result.num_modules);
-        int m = 0;
-        context.result.modules[m++] = (AbstractModule){ .module_type = M_SAWOSC };
-        context.result.modules[m++] = (AbstractModule){ .module_type = M_MIXER };
-        context.result.modules[m++] = (AbstractModule){ .module_type = M_SPEAKERS };
-        
-        context.result.num_connections = 2;
-        context.result.connections = (Connection*) malloc(sizeof(Connection)
-                * context.result.num_connections);
-        int c = 0;
-        context.result.connections[c++] = (Connection){ 0, 0, 1, 0 };
-        context.result.connections[c++] = (Connection){ 1, 0, 2, 0 };
+        processLine(&context, line, s, &i);
+        i++;
+        line++;
+    }
 
-        /* returns 0 if successful, else 1 */
-        context.err = 0;
+    if (context.err == 0)
         snprintf(context.errmsg, BUFFER_SIZE,
                 "Patch processed successfully.");
-    }
 
     return context;
 }
